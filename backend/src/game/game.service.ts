@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 export interface Piece {
-  type: '차' | '마' | '상' | '포' | '졸' | '왕';
+  type: '차' | '마' | '상' | '포' | '졸' | '왕' | '사';
   team: 'red' | 'blue';
   position: { x: number; y: number };
 }
@@ -18,8 +18,22 @@ export class GameService {
   initializeBoard() {
     this.board = [
       { type: '차', team: 'red', position: { x: 0, y: 0 } },
+      { type: '마', team: 'red', position: { x: 1, y: 0 } },
+      { type: '상', team: 'red', position: { x: 2, y: 0 } },
+      { type: '사', team: 'red', position: { x: 3, y: 0 } },
       { type: '왕', team: 'red', position: { x: 4, y: 0 } },
-      // ... 나머지 말들
+      { type: '사', team: 'red', position: { x: 5, y: 0 } },
+      { type: '상', team: 'red', position: { x: 2, y: 0 } },
+      { type: '마', team: 'red', position: { x: 1, y: 0 } },
+      { type: '차', team: 'red', position: { x: 8, y: 0 } },
+      { type: '포', team: 'red', position: { x: 1, y: 2 } },
+      { type: '포', team: 'red', position: { x: 7, y: 2 } },
+      { type: '졸', team: 'red', position: { x: 0, y: 3 } },
+      { type: '졸', team: 'red', position: { x: 2, y: 3 } },
+      { type: '졸', team: 'red', position: { x: 4, y: 3 } },
+      { type: '졸', team: 'red', position: { x: 4, y: 3 } },
+      { type: '졸', team: 'red', position: { x: 6, y: 3 } },
+      { type: '졸', team: 'red', position: { x: 8, y: 3 } },
     ];
   }
 
