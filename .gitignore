@@ -1,63 +1,85 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/frontend/node_modules
+# =========================
+# Backend 빌드/출력/의존성
+# =========================
+/backend/dist
 /backend/node_modules
-/.pnp
-.pnp.js
+/backend/build
 
-# compiled output
-/dist
-/build
+# Backend 로그
+/backend/logs
+/backend/*.log
+/backend/npm-debug.log*
+/backend/pnpm-debug.log*
+/backend/yarn-debug.log*
+/backend/yarn-error.log*
+/backend/lerna-debug.log*
 
-# testing
-/coverage
-/.nyc_output
+# Backend OS 관련
+/backend/.DS_Store
 
-# logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Backend 테스트 출력
+/backend/coverage
+/backend/.nyc_output
 
-# runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Backend IDE/에디터 설정
+/backend/.idea
+/backend/.project
+/backend/.classpath
+/backend/.c9/
+/backend/*.launch
+/backend/.settings/
+/backend/*.sublime-workspace
 
-# diagnostic reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# Backend VSCode
+/backend/.vscode/*
+!/backend/.vscode/settings.json
+!/backend/.vscode/tasks.json
+!/backend/.vscode/launch.json
+!/backend/.vscode/extensions.json
 
-# environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Backend 환경변수 파일
+/backend/.env
+/backend/.env.development.local
+/backend/.env.test.local
+/backend/.env.production.local
+/backend/.env.local
 
-# temp directory
-.temp
-.tmp
+# Backend temp/runtime
+/backend/.temp
+/backend/.tmp
+/backend/pids
+/backend/*.pid
+/backend/*.seed
+/backend/*.pid.lock
 
-# OS
-.DS_Store
+# Backend diagnostic reports
+/backend/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
 
-# VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# =========================
+# Frontend 빌드/출력/의존성
+# =========================
+/frontend/node_modules
+/frontend/dist
+/frontend/dist-ssr
+/frontend/*.local
+
+# Frontend 로그
+/frontend/logs
+/frontend/*.log
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+/frontend/lerna-debug.log*
+
+# Frontend IDE/에디터 설정
+/frontend/.vscode/*
+!/frontend/.vscode/extensions.json
+/frontend/.idea
+/frontend/.DS_Store
+/frontend/*.suo
+/frontend/*.ntvs*
+/frontend/*.njsproj
+/frontend/*.sln
+/frontend/*.sw?
