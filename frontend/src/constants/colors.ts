@@ -21,8 +21,8 @@ export const COLORS = {
 
   ui: {
     border: '#D2B48C', // 박스 테두리
-    text: '#3E2723', // 주요 텍스트
-    textSecondary: '#5D4037', // 보조 텍스트
+    text: '#563732ff', // 주요 텍스트
+    textSecondary: '#835a4dff', // 보조 텍스트
   },
 
   // 버튼
