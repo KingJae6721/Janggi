@@ -1,3 +1,6 @@
+import { useState } from 'react';
+
 export const Modal = () => {
-  return <div>Modal</div>;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  return <>모달입니다</>;
 };
