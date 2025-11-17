@@ -5,7 +5,13 @@
 }
 
 body {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: '8bit', sans-serif;
   width: 100%;
   height: 100vh;
+}
+
+@font-face {
+  font-family: '8bit';
+  font-weight: normal;
+  src: url('./assets/fonts/DungGeunMo.ttf') format('truetype');
 }
