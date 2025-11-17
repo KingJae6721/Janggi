@@ -1,6 +1,8 @@
 # =========================
 # Backend 빌드/출력/의존성
 # =========================
+/node_modules
+
 /backend/dist
 /backend/node_modules
 /backend/build

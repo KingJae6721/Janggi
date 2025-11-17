@@ -1,12 +1,25 @@
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { GameController } from './game/game.cotroller';
-import { GameService } from './game/game.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { GameModule } from './game/game.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController, GameController], // GameController 추가
-  providers: [AppService, GameService], // GameService 추가
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: '1234',
+      database: 'janggi',
+      autoLoadEntities: true, // 엔티티 자동 로드
+      synchronize: true,
+    }),
+    GameModule, // GameModule만 import
+  ],
+  controllers: [AppController], // AppController만 등록
+  providers: [AppService], // AppService만 등록
 })
 export class AppModule {}
