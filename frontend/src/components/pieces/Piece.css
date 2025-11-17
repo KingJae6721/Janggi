@@ -1,0 +1,66 @@
+/* 팔각형 테두리 컨테이너 */
+.piece-border {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+}
+
+/* 한 진영 테두리 */
+.piece-border.han {
+  background-color: #b22222;
+}
+
+/* 초 진영 테두리 */
+.piece-border.cho {
+  background-color: #228b22;
+}
+
+.piece-octagon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: bold;
+  border-radius: 12px;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+  margin: 0 auto;
+}
+
+.piece-octagon.han {
+  background-color: #ffe4b5;
+  color: #b22222;
+}
+
+.piece-octagon.cho {
+  background-color: #ffe4b5;
+  color: #228b22;
+}
+
+.piece-container p {
+  color: #3e2723;
+  font-weight: 500;
+}
