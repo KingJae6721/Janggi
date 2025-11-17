@@ -1,0 +1,20 @@
+.button-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.button {
+  padding: 12px 24px;
+  background-color: #ffb800; /* 밝은 노란색/골드 */
+  color: #3e2723;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: '8bit';
+}
+
+.button:hover {
+  background-color: #e6a600;
+}
