@@ -1,0 +1,88 @@
+.preview-container {
+  max-width: 1000px;
+  margin: 0;
+  padding: 40px 20px;
+  background-color: #fff8dc;
+  min-height: 100vh;
+}
+
+.preview-title {
+  text-align: center;
+  font-size: 32px;
+  color: #3e2723;
+  margin-bottom: 40px;
+}
+.preview-section h2 {
+  margin: 10px 0 20px 0;
+}
+/* 색상 팔레트 */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 20px;
+}
+
+.color-item {
+  text-align: center;
+}
+
+.color-box {
+  width: 100%;
+  height: 100px;
+  border-radius: 8px;
+  border: 2px solid #d2b48c;
+  margin-bottom: 10px;
+}
+
+.color-name {
+  font-weight: bold;
+  color: #3e2723;
+  margin: 5px 0;
+}
+
+.color-value {
+  font-family: monospace;
+  color: #5d4037;
+  font-size: 14px;
+}
+
+/* Input */
+.input-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+}
+
+.preview-input {
+  padding: 12px 16px;
+  border: 2px solid #d2b48c;
+  border-radius: 8px;
+  background-color: #fffaf0;
+  color: #3e2723;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.preview-input:focus {
+  border-color: #8b4513;
+}
+
+.preview-input::placeholder {
+  color: #a89f91;
+}
+
+/* 버튼 */
+.button-showcase {
+  display: flex;
+  gap: 15px;
+}
+
+/* 기물 */
+.piece-showcase {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: center;
+}
