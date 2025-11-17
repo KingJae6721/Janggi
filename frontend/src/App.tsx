@@ -25,8 +25,8 @@ function App() {
 
   return (
     <div className='main-container'>
-      <ComponentPreview />
-      {/* <div className='title-container'>
+      {/* <ComponentPreview /> */}
+      <div className='title-container'>
         <h1 style={{ color: COLORS.ui.text }}>장기 (Janggi)</h1>
         <h3 style={{ color: COLORS.ui.textSecondary }}>Korean Chess</h3>
       </div>
@@ -34,9 +34,14 @@ function App() {
       <InfoBox>
         <div className='infobox-container'>
           <Piece type='왕' team={currentPlayer} size={48} />
-          <p style={{ fontSize: '18px', fontWeight: 'bold' }}>
-            현재 플레이어 :{' '}
-            {currentPlayer === 'cho' ? '초 (녹색)' : '한 (빨강)'}
+          <p
+            style={{
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: COLORS.team[currentPlayer],
+            }}
+          >
+            {currentPlayer === 'cho' ? '초' : '한'}의 차례입니다
           </p>
           <Button onClick={handleNewGame}>새 게임</Button>
         </div>
@@ -47,11 +52,15 @@ function App() {
       </div>
       <InfoBox>
         <h3>게임 방법:</h3>
-        <p>• 자신의 기물을 클릭하여 선택하고, 이동 가능한 위치를 확인하세요</p>
-        <p>• 파란 점이 표시된 위치로 이동할 수 있습니다</p>
-        <p>• 상대의 왕을 잡으면 승리합니다</p>
-        <p>• 초는 녹색, 한은 빨간색으로 표시됩니다</p>
-      </InfoBox> */}
+        <ul className='game-information'>
+          <li>
+            자신의 기물을 클릭하여 선택하고, 이동 가능한 위치를 확인하세요
+          </li>
+          <li>파란 점이 표시된 위치로 이동할 수 있습니다</li>
+          <li>상대의 왕을 잡으면 승리합니다</li>
+          <li>초는 녹색, 한은 빨간색으로 표시됩니다</li>
+        </ul>
+      </InfoBox>
     </div>
   );
 }

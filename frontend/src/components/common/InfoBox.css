@@ -17,13 +17,6 @@
   color: #3e2723;
 }
 
-.info-box p {
-  font-size: 14px;
-  color: #5d4037;
-  line-height: 1.25;
-  text-align: left;
-}
-
 .infobox-container {
   display: flex;
   align-items: center;
