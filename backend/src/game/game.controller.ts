@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { GameService, Piece } from './game.service';
 
 @Controller('game')
@@ -9,6 +9,11 @@ export class GameController {
   @Get('state')
   getBoard(): Piece[] {
     return this.gameService.getBoard();
+  }
+
+  @Post(':id/end')
+  async endGame(@Param('id') id: number, @Body() body: { winner: string }) {
+    return this.gameService.endGame(id, body.winner);
   }
 
   // 말 이동 요청

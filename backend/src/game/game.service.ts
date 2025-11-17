@@ -86,4 +86,49 @@ export class GameService {
     piece.position = to;
     return true;
   }
+
+  //game 테이블 삽입
+  async createGame(player1: string, player2: string): Promise<Game> {
+    //TypeORM의 create() 메서드는 엔티티 객체를 메모리 상에서 생성
+    const game = this.gameRepository.create({ player1, player2 });
+
+    //save()는 엔티티 객체를 실제 데이터베이스에 INSERT
+    //동시에 DB에 저장된 엔티티 전체를 반환
+    return await this.gameRepository.save(game);
+  }
+
+  //종료 시 실행
+  async endGame(gameId: number, winner: string): Promise<Game> {
+    //게임종료시 winner 업데이트
+    const game = await this.gameRepository.findOne({ where: { id: gameId } });
+    if (!game) throw new Error('Game not found');
+
+    game.endedAt = new Date();
+    game.winner = winner;
+
+    return await this.gameRepository.save(game);
+  }
+
+  //gameId로 검색
+  async getMovesByGame(gameId: number): Promise<Move[]> {
+    const game = await this.gameRepository.findOne({
+      where: { id: gameId },
+      relations: ['moves'],
+    });
+
+    return game?.moves ?? [];
+    //??은 널 병합 연산자
+    //앞의 값(game?.moves)이 null 또는 undefined일 경우, 대신 [](빈 배열)을 반환
+  }
+
+  //이동한 로그 처리
+  //Partial<move>를 쓰면 move엔티티의 일부 속성만 받을 수 있다는 뜻
+  async addMove(gameId: number, moveData: Partial<Move>): Promise<Move> {
+    const game = await this.gameRepository.findOne({ where: { id: gameId } });
+    if (!game) throw new Error('Game not found');
+
+    //TYPEORM이 객체 관계를 기반으로 매핑해서 game에서 id만 추출한다고 함
+    const move = this.moveRepository.create({ ...moveData, game });
+    return await this.moveRepository.save(move);
+  }
 }

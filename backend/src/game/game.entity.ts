@@ -18,6 +18,9 @@ export class Game {
   @Column({ type: 'timestamp', nullable: true })
   endedAt: Date;
 
+  @Column({ nullable: true })
+  winner: string; // 승자 이름 기록
+
   @OneToMany(() => Move, (move) => move.game)
   moves: Move[];
 }
