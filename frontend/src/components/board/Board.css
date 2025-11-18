@@ -1,11 +1,34 @@
 .board {
+  position: relative; /* pieces-layer를 위한 relative positioning */
   display: inline-block;
-  background-color: #deb887;
-  padding: 20px;
+  background-color: #f5deb3;
+  padding: 40px;
   border: 4px solid #8b4513;
   border-radius: 8px;
+  /* 보드 그림자 */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.board-grid {
+  position: relative;
+  z-index: 1;
 }
 
 .board-row {
   display: flex;
+}
+
+/* 기물 레이어 - 교차점에 절대 위치 배치 */
+.pieces-layer {
+  position: absolute;
+  top: 40px; /* board padding */
+  left: 40px; /* board padding */
+  z-index: 10;
+  pointer-events: none; /* 클릭 이벤트는 나중에 piece에 추가 */
+}
+
+.piece-position {
+  position: absolute;
+  pointer-events: all; /* 개별 piece는 클릭 가능 */
+  transform: translate(-50%, -50%); /* 정확히 교차점 중앙에 배치 */
 }
