@@ -8,6 +8,7 @@
   background-color: #f5deb3;
   cursor: pointer;
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .board-cell:hover {
