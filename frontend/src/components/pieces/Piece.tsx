@@ -1,4 +1,4 @@
-import { FONTS } from '../../constants/fonts';
+import { pieceSizeConfig } from '../../constants/pieceSizes';
 import type { PieceType, Team } from '../../types/types';
 import { pieceConfig } from './pieceConfig';
 import './Piece.css';
@@ -10,21 +10,24 @@ type PieceProps = {
 };
 
 export const Piece = ({ type, team, size = 46 }: PieceProps) => {
-  const innerSize = size * 0.87; // 테두리를 위해 안쪽 크기를 약간 작게
+  // 기물 타입별 크기 조정
+  const adjustedSize = size * pieceSizeConfig[type];
+  const innerSize = adjustedSize * 0.92; // 테두리 두께 줄이기 (0.87 → 0.92)
+  const fontSize = team === 'cho' ? adjustedSize * 0.55 : adjustedSize * 0.45; // 초 진영 글씨 더 크게
 
   return (
     <div className='piece-container'>
       <div
         className={`piece-border ${team}`}
-        style={{ width: size, height: size }}
+        style={{ width: adjustedSize, height: adjustedSize }}
       >
         <div
           className={`piece-octagon ${team}`}
           style={{
             width: innerSize,
             height: innerSize,
-            fontFamily: FONTS.piece[team],
-            fontSize: size * 0.45,
+            fontSize: fontSize,
+            // fontFamily는 CSS에서 처리
           }}
         >
           {pieceConfig[type][team]}
