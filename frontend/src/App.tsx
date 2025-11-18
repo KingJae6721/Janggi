@@ -10,6 +10,8 @@ import { Piece } from './components/pieces/Piece';
 
 function App() {
   const [currentPlayer, setCurrentPlayer] = useState<Team>('cho'); // 초 또는 한
+  const [isVisible, setIsVisible] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(true);
 
   useEffect(() => {
     fetch('http://localhost:3000/game/state')
@@ -24,7 +26,13 @@ function App() {
   };
 
   return (
-    <div className='main-container'>
+    <div
+      className='main-container'
+      style={{
+        pointerEvents: isEnabled ? 'auto' : 'none',
+        opacity: isEnabled ? 1 : 0.5,
+      }}
+    >
       {/* <ComponentPreview /> */}
       <div className='title-container'>
         <h1 style={{ color: COLORS.ui.text }}>장기 (Janggi)</h1>
@@ -47,9 +55,7 @@ function App() {
         </div>
       </InfoBox>
 
-      <div className='board-container'>
-        <Board></Board>
-      </div>
+      <div className='board-container'>{isVisible && <Board />}</div>
       <InfoBox>
         <h3>게임 방법:</h3>
         <ul className='game-information'>
