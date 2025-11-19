@@ -3,17 +3,23 @@ import { Piece } from '../pieces/Piece';
 import './Board.css';
 import { useState } from 'react';
 import type { PieceData } from '../../types/types';
-import { initialPieces } from '../../constants/initialPieces';
+import { initialBoard } from '../../constants/initialPieces';
 
 export const Board = () => {
-  const [pieces] = useState<PieceData[]>(initialPieces);
+  // initialBoard는 (PieceData | null)[][] 구조
+  const [pieceBoard, setPieceBoard] = useState<(PieceData | null)[][]>(initialBoard);
+  const [selected, setSelected] = useState<PieceData | null>(null);
+
+  const handleSelect = (piece: PieceData) => {
+    setSelected(piece);
+  };
 
   return (
-    <div className='board'>
+    <div className="board">
       {/* 9x8 셀 그리드 */}
-      <div className='board-grid'>
+      <div className="board-grid">
         {Array.from({ length: 9 }).map((_, rowIndex) => (
-          <div key={rowIndex} className='board-row'>
+          <div key={rowIndex} className="board-row">
             {Array.from({ length: 8 }).map((_, colIndex) => (
               <BoardCell
                 key={`${rowIndex}-${colIndex}`}
@@ -26,20 +32,60 @@ export const Board = () => {
       </div>
 
       {/* 10x9 교차점에 기물 배치 */}
-      <div className='pieces-layer'>
-        {pieces.map((piece, index) => (
-          <div
-            key={index}
-            className='piece-position'
-            style={{
-              left: `${piece.x * 60}px`, // 60px = 셀 크기
-              top: `${piece.y * 60}px`,
-            }}
-          >
-            <Piece type={piece.type} team={piece.team} size={50} />
-          </div>
-        ))}
+      <div className="pieces-layer">
+        {pieceBoard.map((row, rowIndex) =>
+          row.map(
+            (cell, colIndex) =>
+              cell && (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className="piece-position"
+                  style={{
+                    left: `${colIndex * 60}px`,
+                    top: `${rowIndex * 60}px`,
+                  }}
+                  onClick={() => handleSelect(cell)}
+                >
+                  <Piece type={cell.type} team={cell.team} size={50} />
+                </div>
+              )
+          )
+        )}
       </div>
+
+      {/* 선택된 기물 기준 원 표시 */}
+      {selected && (
+        <>
+          <div
+            className="highlight-circle"
+            style={{
+              left: `${selected.x * 60}px`,
+              top: `${(selected.y - 1) * 60}px`,
+            }}
+          />
+          <div
+            className="highlight-circle"
+            style={{
+              left: `${selected.x * 60}px`,
+              top: `${(selected.y + 1) * 60}px`,
+            }}
+          />
+          <div
+            className="highlight-circle"
+            style={{
+              left: `${(selected.x - 1) * 60}px`,
+              top: `${selected.y * 60}px`,
+            }}
+          />
+          <div
+            className="highlight-circle"
+            style={{
+              left: `${(selected.x + 1) * 60}px`,
+              top: `${selected.y * 60}px`,
+            }}
+          />
+        </>
+      )}
     </div>
   );
 };

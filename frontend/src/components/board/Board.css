@@ -32,3 +32,14 @@
   pointer-events: all; /* 개별 piece는 클릭 가능 */
   transform: translate(-50%, -50%); /* 정확히 교차점 중앙에 배치 */
 }
+
+.highlight-circle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 255, 0.5);
+  transform: translate(150%, 150%); /* 정확히 교차점 중앙에 배치 */
+  pointer-events: none;
+  z-index: 20; /* 보드와 기물 위에 표시 */
+}
