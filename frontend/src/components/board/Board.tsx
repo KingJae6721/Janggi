@@ -7,7 +7,8 @@ import { initialBoard } from '../../constants/initialPieces';
 
 export const Board = () => {
   // initialBoard는 (PieceData | null)[][] 구조
-  const [pieceBoard, setPieceBoard] = useState<(PieceData | null)[][]>(initialBoard);
+  const [pieceBoard, setPieceBoard] =
+    useState<(PieceData | null)[][]>(initialBoard);
   const [selected, setSelected] = useState<PieceData | null>(null);
 
   const handleSelect = (piece: PieceData) => {
@@ -15,11 +16,11 @@ export const Board = () => {
   };
 
   return (
-    <div className="board">
+    <div className='board'>
       {/* 9x8 셀 그리드 */}
-      <div className="board-grid">
+      <div className='board-grid'>
         {Array.from({ length: 9 }).map((_, rowIndex) => (
-          <div key={rowIndex} className="board-row">
+          <div key={rowIndex} className='board-row'>
             {Array.from({ length: 8 }).map((_, colIndex) => (
               <BoardCell
                 key={`${rowIndex}-${colIndex}`}
@@ -32,14 +33,18 @@ export const Board = () => {
       </div>
 
       {/* 10x9 교차점에 기물 배치 */}
-      <div className="pieces-layer">
+      <div className='pieces-layer'>
         {pieceBoard.map((row, rowIndex) =>
           row.map(
             (cell, colIndex) =>
               cell && (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className="piece-position"
+                  className={`piece-position ${
+                    selected?.x === colIndex && selected?.y === rowIndex
+                      ? 'selected'
+                      : ''
+                  }`}
                   style={{
                     left: `${colIndex * 60}px`,
                     top: `${rowIndex * 60}px`,
@@ -57,28 +62,28 @@ export const Board = () => {
       {selected && (
         <>
           <div
-            className="highlight-circle"
+            className='highlight-circle'
             style={{
               left: `${selected.x * 60}px`,
               top: `${(selected.y - 1) * 60}px`,
             }}
           />
           <div
-            className="highlight-circle"
+            className='highlight-circle'
             style={{
               left: `${selected.x * 60}px`,
               top: `${(selected.y + 1) * 60}px`,
             }}
           />
           <div
-            className="highlight-circle"
+            className='highlight-circle'
             style={{
               left: `${(selected.x - 1) * 60}px`,
               top: `${selected.y * 60}px`,
             }}
           />
           <div
-            className="highlight-circle"
+            className='highlight-circle'
             style={{
               left: `${(selected.x + 1) * 60}px`,
               top: `${selected.y * 60}px`,

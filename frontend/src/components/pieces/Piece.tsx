@@ -13,7 +13,7 @@ export const Piece = ({ type, team, size = 46 }: PieceProps) => {
   // 기물 타입별 크기 조정
   const adjustedSize = size * pieceSizeConfig[type];
   const innerSize = adjustedSize * 0.92; // 테두리 두께 줄이기 (0.87 → 0.92)
-  const fontSize = team === 'cho' ? adjustedSize * 0.55 : adjustedSize * 0.45; // 초 진영 글씨 더 크게
+  const fontSize = team === 'cho' ? adjustedSize * 0.7 : adjustedSize * 0.6; // 초 진영 글씨 더 크게
 
   return (
     <div className='piece-container'>

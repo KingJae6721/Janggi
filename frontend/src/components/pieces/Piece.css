@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: center;
   margin: 0;
+
   clip-path: polygon(
     30% 0%,
     70% 0%,
@@ -54,16 +55,8 @@
     linear-gradient(to bottom, #ffffff 92%, #e0e0e0 80%, #d0d0d0 100%),
     linear-gradient(225deg, #ffffff 80%, #e0e0e0 50%, #d0d0d0 100%);
   background-blend-mode: multiply;
-  /* 안쪽 그림자로 깊이감 추가 */
-  box-shadow: inset 0px 2px 4px rgba(255, 255, 255, 0.8),
-    inset 0px -2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.piece-octagon :hover {
-  transform: scale(1.05);
-  transition: transform 0.2s;
-  background-color: #d0c8be;
-}
 .piece-octagon.han {
   color: #b22222;
   font-weight: 700;
@@ -80,3 +73,23 @@
   color: #3e2723;
   font-weight: 500;
 }
+
+.piece-container:hover {
+  transform: scale(1.2);
+  transition: transform 0.1s ease;
+}
+.piece-container:not(:hover) {
+  transform: scale(1);
+  transition: transform 0.1s ease;
+}
+
+/* .piece-container:hover .piece-octagon.han,
+.piece-container:hover .piece-border.han {
+  background-color: #ff2c56;
+  color: #ff2c56;
+}
+.piece-container:hover .piece-octagon.cho,
+.piece-container:hover .piece-border.cho {
+  background-color: #b5ffbd;
+  color: #2ecc40;
+} */

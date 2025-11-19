@@ -33,6 +33,11 @@
   transform: translate(-50%, -50%); /* 정확히 교차점 중앙에 배치 */
 }
 
+/* 선택된 기물에 hover 효과 유지 */
+.piece-position.selected .piece-container {
+  transform: scale(1.2);
+}
+
 .highlight-circle {
   position: absolute;
   width: 20px;
