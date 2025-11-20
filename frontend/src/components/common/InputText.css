@@ -1,0 +1,21 @@
+.input-label {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 16px;
+  border: 2px solid #d2b48c;
+  border-radius: 8px;
+  background-color: #fffaf0;
+  color: #3e2723;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-label:focus {
+  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+}
+
+.input-label::placeholder {
+  color: #a89f91;
+}
