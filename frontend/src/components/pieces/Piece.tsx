@@ -12,7 +12,8 @@ type PieceProps = {
 export const Piece = ({ type, team, size = 46 }: PieceProps) => {
   // 기물 타입별 크기 조정
   const adjustedSize = size * pieceSizeConfig[type];
-  const innerSize = adjustedSize * 0.92; // 테두리 두께 줄이기 (0.87 → 0.92)
+  const borderThickness = 2; // 테두리 두께 고정 (4px)
+  const innerSize = adjustedSize - borderThickness * 2; // 양쪽 테두리 고려
   const fontSize = team === 'cho' ? adjustedSize * 0.7 : adjustedSize * 0.6; // 초 진영 글씨 더 크게
 
   return (
@@ -27,7 +28,6 @@ export const Piece = ({ type, team, size = 46 }: PieceProps) => {
             width: innerSize,
             height: innerSize,
             fontSize: fontSize,
-            // fontFamily는 CSS에서 처리
           }}
         >
           {pieceConfig[type][team]}
