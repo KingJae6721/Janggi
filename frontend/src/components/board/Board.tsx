@@ -5,8 +5,13 @@ import { useState } from 'react';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
 import { getLegalMoves, isCheck } from '../../utils/janggiRules';
+import { addMove, getBoard } from '../../api/gameApi'; // 상단에 추가
 
-export const Board = () => {
+type BoardProps = {
+  gameId: number;
+};
+
+export const Board = ({ gameId }: BoardProps) => {
   // 보드 상태: 2차원 배열로 각 칸에 기물(PieceData) 또는 null 저장
   const [pieceBoard, setPieceBoard] =
     useState<(PieceData | null)[][]>(initialBoard);
@@ -46,8 +51,7 @@ export const Board = () => {
     }
   };
 
-  // 기물 이동 핸들러
-  const movePiece = (toX: number, toY: number) => {
+  const movePiece = async (toX: number, toY: number) => {
     if (!selected) return;
 
     let newBoard: (PieceData | null)[][] = [];
@@ -63,6 +67,17 @@ export const Board = () => {
     // 선택 해제
     setSelected(null);
 
+    // ✅ 이동 기록 저장
+    await addMove(gameId, {
+      turn: turnInfo.count, // ✅ 추가
+      piece: selected.type,
+      fromX: selected.x,
+      fromY: selected.y,
+      toX,
+      toY,
+      team: selected.team,
+    });
+
     // 턴 교체
     setTurnInfo((prev) => {
       const nextTurn = prev.turn === 'cho' ? 'han' : 'cho';
@@ -72,7 +87,6 @@ export const Board = () => {
         .flat()
         .filter((p): p is PieceData => p !== null);
 
-      // 현재 턴의 왕이 장군인지 확인
       const checkNow = isCheck(flatBoard, nextTurn);
 
       if (checkNow) {
@@ -81,7 +95,6 @@ export const Board = () => {
         console.log('멍군!');
       }
 
-      // 상태 업데이트
       setWasCheck((prevWas) => ({
         ...prevWas,
         [nextTurn]: checkNow,

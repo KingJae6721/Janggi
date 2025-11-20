@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 
 export interface Piece {
   type: '차' | '마' | '상' | '포' | '졸' | '왕' | '사';
-  team: 'red' | 'blue';
+  team: 'han' | 'cho';
   position: { x: number; y: number };
 }
 
@@ -26,43 +26,43 @@ export class GameService {
   // 초기 말 배치
   initializeBoard() {
     this.board = [
-      //red
-      { type: '차', team: 'red', position: { x: 0, y: 0 } },
-      { type: '마', team: 'red', position: { x: 1, y: 0 } },
-      { type: '상', team: 'red', position: { x: 2, y: 0 } },
-      { type: '사', team: 'red', position: { x: 3, y: 0 } },
-      { type: '왕', team: 'red', position: { x: 4, y: 0 } },
-      { type: '사', team: 'red', position: { x: 5, y: 0 } },
-      { type: '상', team: 'red', position: { x: 2, y: 0 } },
-      { type: '마', team: 'red', position: { x: 1, y: 0 } },
-      { type: '차', team: 'red', position: { x: 8, y: 0 } },
-      { type: '포', team: 'red', position: { x: 1, y: 2 } },
-      { type: '포', team: 'red', position: { x: 7, y: 2 } },
-      { type: '졸', team: 'red', position: { x: 0, y: 3 } },
-      { type: '졸', team: 'red', position: { x: 2, y: 3 } },
-      { type: '졸', team: 'red', position: { x: 4, y: 3 } },
-      { type: '졸', team: 'red', position: { x: 4, y: 3 } },
-      { type: '졸', team: 'red', position: { x: 6, y: 3 } },
-      { type: '졸', team: 'red', position: { x: 8, y: 3 } },
+      //han
+      { type: '차', team: 'han', position: { x: 0, y: 0 } },
+      { type: '마', team: 'han', position: { x: 1, y: 0 } },
+      { type: '상', team: 'han', position: { x: 2, y: 0 } },
+      { type: '사', team: 'han', position: { x: 3, y: 0 } },
+      { type: '왕', team: 'han', position: { x: 4, y: 0 } },
+      { type: '사', team: 'han', position: { x: 5, y: 0 } },
+      { type: '상', team: 'han', position: { x: 2, y: 0 } },
+      { type: '마', team: 'han', position: { x: 1, y: 0 } },
+      { type: '차', team: 'han', position: { x: 8, y: 0 } },
+      { type: '포', team: 'han', position: { x: 1, y: 2 } },
+      { type: '포', team: 'han', position: { x: 7, y: 2 } },
+      { type: '졸', team: 'han', position: { x: 0, y: 3 } },
+      { type: '졸', team: 'han', position: { x: 2, y: 3 } },
+      { type: '졸', team: 'han', position: { x: 4, y: 3 } },
+      { type: '졸', team: 'han', position: { x: 4, y: 3 } },
+      { type: '졸', team: 'han', position: { x: 6, y: 3 } },
+      { type: '졸', team: 'han', position: { x: 8, y: 3 } },
 
-      //blue
-      { type: '차', team: 'blue', position: { x: 0, y: 9 } },
-      { type: '마', team: 'blue', position: { x: 1, y: 9 } },
-      { type: '상', team: 'blue', position: { x: 2, y: 9 } },
-      { type: '사', team: 'blue', position: { x: 3, y: 9 } },
-      { type: '왕', team: 'blue', position: { x: 4, y: 9 } },
-      { type: '사', team: 'blue', position: { x: 5, y: 9 } },
-      { type: '상', team: 'blue', position: { x: 2, y: 9 } },
-      { type: '마', team: 'blue', position: { x: 1, y: 9 } },
-      { type: '차', team: 'blue', position: { x: 8, y: 9 } },
-      { type: '포', team: 'blue', position: { x: 1, y: 7 } },
-      { type: '포', team: 'blue', position: { x: 7, y: 7 } },
-      { type: '졸', team: 'blue', position: { x: 0, y: 6 } },
-      { type: '졸', team: 'blue', position: { x: 2, y: 6 } },
-      { type: '졸', team: 'blue', position: { x: 4, y: 6 } },
-      { type: '졸', team: 'blue', position: { x: 4, y: 6 } },
-      { type: '졸', team: 'blue', position: { x: 6, y: 6 } },
-      { type: '졸', team: 'blue', position: { x: 8, y: 6 } },
+      //cho
+      { type: '차', team: 'cho', position: { x: 0, y: 9 } },
+      { type: '마', team: 'cho', position: { x: 1, y: 9 } },
+      { type: '상', team: 'cho', position: { x: 2, y: 9 } },
+      { type: '사', team: 'cho', position: { x: 3, y: 9 } },
+      { type: '왕', team: 'cho', position: { x: 4, y: 9 } },
+      { type: '사', team: 'cho', position: { x: 5, y: 9 } },
+      { type: '상', team: 'cho', position: { x: 2, y: 9 } },
+      { type: '마', team: 'cho', position: { x: 1, y: 9 } },
+      { type: '차', team: 'cho', position: { x: 8, y: 9 } },
+      { type: '포', team: 'cho', position: { x: 1, y: 7 } },
+      { type: '포', team: 'cho', position: { x: 7, y: 7 } },
+      { type: '졸', team: 'cho', position: { x: 0, y: 6 } },
+      { type: '졸', team: 'cho', position: { x: 2, y: 6 } },
+      { type: '졸', team: 'cho', position: { x: 4, y: 6 } },
+      { type: '졸', team: 'cho', position: { x: 4, y: 6 } },
+      { type: '졸', team: 'cho', position: { x: 6, y: 6 } },
+      { type: '졸', team: 'cho', position: { x: 8, y: 6 } },
     ];
   }
 

@@ -9,16 +9,16 @@ import type { Team } from './types/types';
 import { Piece } from './components/pieces/Piece';
 import { Modal } from './components/common/Modal';
 import InputText from './components/common/InputText';
+import { getBoard, createGame, addMove } from './api/gameApi';
 
 function App() {
   const [currentPlayer, setCurrentPlayer] = useState<Team>('cho'); // 초 또는 한
-  const [isVisible, setIsVisible] = useState(true);
   const [isEnabled, setIsEnabled] = useState(false);
   const [player1Name, setPlayer1Name] = useState('');
   const [player2Name, setPlayer2Name] = useState('');
-
+  const [gameId, setGameId] = useState<number | null>(null);
   useEffect(() => {
-    fetch('http://localhost:3000/game/state')
+    fetch('http://localhost:3000/game/board')
       .then((res) => res.json())
       .then((data) => {
         console.log('현재 보드 상태:', data);
@@ -29,9 +29,11 @@ function App() {
     setCurrentPlayer('cho'); // 게임 초기화 시 초부터 시작
   };
 
-  const startNewGame = () => {
+  const startNewGame = async () => {
     if (player1Name.trim() && player2Name.trim()) {
       setIsEnabled(true);
+      const game = await createGame(player1Name, player2Name);
+      setGameId(game.id); // ✅ 생성된 게임의 ID 저장
     }
   };
 
@@ -65,7 +67,9 @@ function App() {
           </div>
         </InfoBox>
 
-        <div className='board-container'>{isVisible && <Board />}</div>
+        <div className='board-container'>
+          {gameId !== null && <Board gameId={gameId} />}
+        </div>
         <InfoBox>
           <h3>게임 방법:</h3>
           <ul className='game-information'>
