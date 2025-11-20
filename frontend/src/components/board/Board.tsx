@@ -4,12 +4,17 @@ import './Board.css';
 import { useState } from 'react';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
-import { getPossibleMoves } from '../../utils/janggiRules';
+import { getLegalMoves, isCheck } from '../../utils/janggiRules';
 
 export const Board = () => {
+  // 보드 상태: 2차원 배열로 각 칸에 기물(PieceData) 또는 null 저장
   const [pieceBoard, setPieceBoard] =
     useState<(PieceData | null)[][]>(initialBoard);
+
+  // 현재 선택된 기물
   const [selected, setSelected] = useState<PieceData | null>(null);
+
+  // 턴 정보: 몇 번째 턴인지와 현재 턴의 진영(초/한)
   const [turnInfo, setTurnInfo] = useState<{
     count: number;
     turn: 'cho' | 'han';
@@ -18,40 +23,77 @@ export const Board = () => {
     turn: 'cho',
   });
 
-  // 기물만 추출
-  const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
-  const possibleMoves = selected ? getPossibleMoves(selected, pieces) : [];
+  //전 턴에 내왕이 장군상태인지 체크
+  const [wasCheck, setWasCheck] = useState<{ cho: boolean; han: boolean }>({
+    cho: false,
+    han: false,
+  });
 
+  // 현재 보드에서 기물만 추출(flat으로 1차원 배열로 변환)
+  const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
+
+  // 선택된 기물의 합법적인 이동 후보 계산
+  const possibleMoves = selected ? getLegalMoves(selected, pieces) : [];
+
+  // 기물 선택 핸들러
   const handleSelect = (piece: PieceData) => {
+    // 이미 선택된 기물을 다시 클릭하면 선택 해제
     if (selected?.x === piece.x && selected?.y === piece.y) {
       setSelected(null);
     } else {
+      // 새로운 기물 선택
       setSelected(piece);
     }
   };
 
+  // 기물 이동 핸들러
   const movePiece = (toX: number, toY: number) => {
     if (!selected) return;
 
+    let newBoard: (PieceData | null)[][] = [];
+
+    // 보드 상태 업데이트
     setPieceBoard((prev) => {
-      const newBoard = prev.map((row) => row.slice());
-      newBoard[selected.y][selected.x] = null;
-      newBoard[toY][toX] = { ...selected, x: toX, y: toY };
+      newBoard = prev.map((row) => row.slice()); // 깊은 복사
+      newBoard[selected.y][selected.x] = null; // 원래 위치 비우기
+      newBoard[toY][toX] = { ...selected, x: toX, y: toY }; // 새 위치에 기물 배치
       return newBoard;
     });
 
+    // 선택 해제
     setSelected(null);
 
     // 턴 교체
-    setTurnInfo((prev) => ({
-      count: prev.count + 1,
-      turn: prev.turn === 'cho' ? 'han' : 'cho',
-    }));
+    setTurnInfo((prev) => {
+      const nextTurn = prev.turn === 'cho' ? 'han' : 'cho';
+      const nextCount = prev.count + 1;
+
+      const flatBoard = newBoard
+        .flat()
+        .filter((p): p is PieceData => p !== null);
+
+      // 현재 턴의 왕이 장군인지 확인
+      const checkNow = isCheck(flatBoard, nextTurn);
+
+      if (checkNow) {
+        console.log(`${nextTurn} 왕이 장군 상태입니다!`);
+      } else if (wasCheck[nextTurn]) {
+        console.log('멍군!');
+      }
+
+      // 상태 업데이트
+      setWasCheck((prevWas) => ({
+        ...prevWas,
+        [nextTurn]: checkNow,
+      }));
+
+      return { count: nextCount, turn: nextTurn };
+    });
   };
 
   return (
     <div className='board'>
-      {/* 9x8 셀 그리드 */}
+      {/* 9x8 셀 그리드 (보드 바탕) */}
       <div className='board-grid'>
         {Array.from({ length: 9 }).map((_, rowIndex) => (
           <div key={rowIndex} className='board-row'>
@@ -66,7 +108,7 @@ export const Board = () => {
         ))}
       </div>
 
-      {/* 기물 렌더링 */}
+      {/* 기물 렌더링 레이어 */}
       <div className='pieces-layer'>
         {pieces.map((piece, i) => {
           const isSelected = selected?.x === piece.x && selected?.y === piece.y;

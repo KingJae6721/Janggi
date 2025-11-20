@@ -213,43 +213,38 @@ function chaMoves(piece: PieceData, board: PieceData[]): Position[] {
 
   return moves;
 }
-
 function poMoves(piece: PieceData, board: PieceData[]): Position[] {
   const moves: Position[] = [];
   const { x, y, team } = piece;
 
-  // 직선 네 방향 (상, 하, 좌, 우)
   const directions = [
     { dx: 0, dy: -1 }, // 위
-    { dx: 0, dy: 1 },  // 아래
+    { dx: 0, dy: 1 }, // 아래
     { dx: -1, dy: 0 }, // 왼쪽
-    { dx: 1, dy: 0 },  // 오른쪽
+    { dx: 1, dy: 0 }, // 오른쪽
   ];
 
   for (const dir of directions) {
     let moveX = x + dir.dx;
     let moveY = y + dir.dy;
-    let jumped = false; // 점프 여부
+    let jumped = false;
 
     while (moveX >= 0 && moveX < 9 && moveY >= 0 && moveY < 10) {
-      const occupied = board.find(p => p.x === moveX && p.y === moveY);
+      const occupied = board.find((p) => p.x === moveX && p.y === moveY);
 
       if (!jumped) {
-        // 아직 점프 전: 첫 번째 기물을 만나야 점프 가능
         if (occupied) {
+          // 포끼리 못 넘는 조건
+          if (occupied.type === '포') break;
           jumped = true;
         }
       } else {
-        // 점프 후: 첫 번째 기물 뒤의 칸만 유효
         if (occupied) {
-          // 상대 기물이면 잡을 수 있음
-          if (occupied.team !== team) {
+          if (occupied.team !== team && occupied.type !== '포') {
             moves.push({ x: moveX, y: moveY });
           }
-          // 아군 기물이면 착지 불가
           break;
         } else {
-          // 빈 칸이면 착지 가능
           moves.push({ x: moveX, y: moveY });
         }
       }
@@ -261,6 +256,7 @@ function poMoves(piece: PieceData, board: PieceData[]): Position[] {
 
   return moves;
 }
+
 function kingMoves(piece: PieceData, board: PieceData[]): Position[] {
   const moves: Position[] = [];
   const { x, y, team } = piece;
@@ -274,7 +270,7 @@ function kingMoves(piece: PieceData, board: PieceData[]): Position[] {
   ];
 
   // 궁 중앙 좌표
-  const center = team === "cho" ? { x: 4, y: 1 } : { x: 4, y: 8 };
+  const center = team === 'cho' ? { x: 4, y: 1 } : { x: 4, y: 8 };
 
   // 중앙에 있을 때 대각선 이동 추가
   if (x === center.x && y === center.y) {
@@ -295,13 +291,13 @@ function kingMoves(piece: PieceData, board: PieceData[]): Position[] {
 
     // 궁성 범위 체크
     const inPalace =
-      team === "cho"
+      team === 'cho'
         ? moveX >= 3 && moveX <= 5 && moveY >= 0 && moveY <= 2
         : moveX >= 3 && moveX <= 5 && moveY >= 7 && moveY <= 9;
 
     if (!inPalace) continue;
 
-    const occupied = board.find(p => p.x === moveX && p.y === moveY);
+    const occupied = board.find((p) => p.x === moveX && p.y === moveY);
     if (!occupied || occupied.team !== team) {
       moves.push({ x: moveX, y: moveY });
     }
@@ -310,3 +306,46 @@ function kingMoves(piece: PieceData, board: PieceData[]): Position[] {
   return moves;
 }
 
+export function isCheck(board: PieceData[], team: 'cho' | 'han'): boolean {
+  // 현재 team의 왕 찾기
+  const king = board.find(p => p.type === '왕' && p.team === team);
+  if (!king) return false;
+
+  // 상대 기물들 추출
+  const opponentPieces = board.filter(p => p.team !== team);
+
+  // 상대 기물들의 이동 가능 위치 검사
+  for (const piece of opponentPieces) {
+    const moves = getPossibleMoves(piece, board);
+    if (moves.some(pos => pos.x === king.x && pos.y === king.y)) {
+      return true; // 왕이 공격받음 → 장군 상태
+    }
+  }
+
+  return false;
+}
+
+export function getLegalMoves(piece: PieceData, board: PieceData[]): Position[] {
+  const possible = getPossibleMoves(piece, board);
+  const legal: Position[] = [];
+
+  for (const move of possible) {
+    // 가상 보드 생성
+    const newBoard = board.map(p => ({ ...p }));
+    const idx = newBoard.findIndex(p => p.x === piece.x && p.y === piece.y);
+    if (idx !== -1) {
+      newBoard[idx] = { ...piece, x: move.x, y: move.y };
+    }
+
+    // 상대 기물 제거 (잡는 경우)
+    const capturedIdx = newBoard.findIndex(p => p.x === move.x && p.y === move.y && p.team !== piece.team);
+    if (capturedIdx !== -1) newBoard.splice(capturedIdx, 1);
+
+    // 자기 왕이 공격받는지 검사
+    if (!isCheck(newBoard, piece.team)) {
+      legal.push(move);
+    }
+  }
+
+  return legal;
+}
