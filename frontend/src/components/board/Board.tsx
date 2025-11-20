@@ -4,15 +4,49 @@ import './Board.css';
 import { useState } from 'react';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
+import { getPossibleMoves } from '../../utils/janggiRules';
 
 export const Board = () => {
-  // initialBoard는 (PieceData | null)[][] 구조
   const [pieceBoard, setPieceBoard] =
     useState<(PieceData | null)[][]>(initialBoard);
   const [selected, setSelected] = useState<PieceData | null>(null);
+  const [turnInfo, setTurnInfo] = useState<{
+    count: number;
+    turn: 'cho' | 'han';
+  }>({
+    count: 1,
+    turn: 'cho',
+  });
+
+  // 기물만 추출
+  const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
+  const possibleMoves = selected ? getPossibleMoves(selected, pieces) : [];
 
   const handleSelect = (piece: PieceData) => {
-    setSelected(piece);
+    if (selected?.x === piece.x && selected?.y === piece.y) {
+      setSelected(null);
+    } else {
+      setSelected(piece);
+    }
+  };
+
+  const movePiece = (toX: number, toY: number) => {
+    if (!selected) return;
+
+    setPieceBoard((prev) => {
+      const newBoard = prev.map((row) => row.slice());
+      newBoard[selected.y][selected.x] = null;
+      newBoard[toY][toX] = { ...selected, x: toX, y: toY };
+      return newBoard;
+    });
+
+    setSelected(null);
+
+    // 턴 교체
+    setTurnInfo((prev) => ({
+      count: prev.count + 1,
+      turn: prev.turn === 'cho' ? 'han' : 'cho',
+    }));
   };
 
   return (
@@ -32,65 +66,45 @@ export const Board = () => {
         ))}
       </div>
 
-      {/* 10x9 교차점에 기물 배치 */}
+      {/* 기물 렌더링 */}
       <div className='pieces-layer'>
-        {pieceBoard.map((row, rowIndex) =>
-          row.map(
-            (cell, colIndex) =>
-              cell && (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`piece-position ${
-                    selected?.x === colIndex && selected?.y === rowIndex
-                      ? 'selected'
-                      : ''
-                  }`}
-                  style={{
-                    left: `${colIndex * 60}px`,
-                    top: `${rowIndex * 60}px`,
-                  }}
-                  onClick={() => handleSelect(cell)}
-                >
-                  <Piece type={cell.type} team={cell.team} size={50} />
-                </div>
-              )
-          )
-        )}
+        {pieces.map((piece, i) => {
+          const isSelected = selected?.x === piece.x && selected?.y === piece.y;
+          const isOpponent = piece.team !== turnInfo.turn; // 현재 턴과 다른 진영
+
+          return (
+            <div
+              key={`piece-${i}`}
+              className={`piece-position ${isSelected ? 'selected' : ''} ${
+                isOpponent ? 'unable' : ''
+              }`}
+              style={{
+                left: `${piece.x * 60}px`,
+                top: `${piece.y * 60}px`,
+              }}
+              onClick={() => {
+                if (!isOpponent) handleSelect(piece); // 상대 진영이면 클릭 막기
+              }}
+            >
+              <Piece type={piece.type} team={piece.team} size={50} />
+            </div>
+          );
+        })}
       </div>
 
-      {/* 선택된 기물 기준 원 표시 */}
-      {selected && (
-        <>
+      {/* 이동 가능 위치 하이라이트 */}
+      {selected &&
+        possibleMoves.map((pos, i) => (
           <div
+            key={`highlight-${i}`}
             className='highlight-circle'
             style={{
-              left: `${selected.x * 60}px`,
-              top: `${(selected.y - 1) * 60}px`,
+              left: `${pos.x * 60}px`,
+              top: `${pos.y * 60}px`,
             }}
+            onClick={() => movePiece(pos.x, pos.y)}
           />
-          <div
-            className='highlight-circle'
-            style={{
-              left: `${selected.x * 60}px`,
-              top: `${(selected.y + 1) * 60}px`,
-            }}
-          />
-          <div
-            className='highlight-circle'
-            style={{
-              left: `${(selected.x - 1) * 60}px`,
-              top: `${selected.y * 60}px`,
-            }}
-          />
-          <div
-            className='highlight-circle'
-            style={{
-              left: `${(selected.x + 1) * 60}px`,
-              top: `${selected.y * 60}px`,
-            }}
-          />
-        </>
-      )}
+        ))}
     </div>
   );
 };

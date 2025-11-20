@@ -37,14 +37,18 @@
 .piece-position.selected .piece-container {
   transform: scale(1.2);
 }
+.piece-position.unable {
+  opacity: 1;       /* 흐리게 표시 */
+  pointer-events: none; /* 클릭 불가 */
+}
 
 .highlight-circle {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: rgba(0, 0, 255, 0.5);
-  transform: translate(150%, 150%); /* 정확히 교차점 중앙에 배치 */
-  pointer-events: none;
+  transform: translate(84%, 83%); /* 정확히 교차점 중앙에 배치 */
+  pointer-events: stroke;
   z-index: 20; /* 보드와 기물 위에 표시 */
 }
