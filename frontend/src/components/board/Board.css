@@ -37,9 +37,10 @@
 .piece-position.selected .piece-container {
   transform: scale(1.2);
 }
+
 .piece-position.unable {
-  opacity: 1;       /* 흐리게 표시 */
-  pointer-events: none; /* 클릭 불가 */
+  filter: brightness(50%);
+  pointer-events: none;
 }
 
 .highlight-circle {
