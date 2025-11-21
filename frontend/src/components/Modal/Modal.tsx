@@ -5,13 +5,15 @@ type ModalProps = {
   width?: string;
   height?: string;
   backgroundColor?: string;
+  border?: string;
 };
 
 export const Modal = ({
   children,
-  width = '400px',
-  height = '300px',
+  width = '550px',
+  height = '500px',
   backgroundColor = '#ffffff',
+  border = '2px solid #8b4513',
 }: ModalProps) => {
   return (
     <div
@@ -21,6 +23,7 @@ export const Modal = ({
           width,
           height,
           backgroundColor,
+          border,
         } as React.CSSProperties
       }
     >
