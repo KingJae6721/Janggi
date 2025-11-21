@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 // import { ComponentPreview } from './pages/ComponentPreview';
-import { InfoBox } from './components/common/InfoBox';
-import { Button } from './components/common/Button';
+import { InfoBox } from './components/InfoBox/InfoBox';
 import { Board } from './components/board/Board';
 import { COLORS } from './constants/colors';
 import type { Team } from './types/types';
-import { Piece } from './components/pieces/Piece';
-import { Modal } from './components/common/Modal';
-import InputText from './components/common/InputText';
+import { Modal } from './components/Modal/Modal';
+import { PlayerInputModal } from './components/Modal/PlayerInputModal';
 import { getBoard, createGame, addMove } from './api/gameApi';
+import GameInfoBox from './components/InfoBox/GameInfoBox';
+import TeamInfoBox from './components/InfoBox/TeamInfoBox';
+import WinnerShowModal from './components/Modal/WinnerShowModal';
+import Title from './components/common/Title';
 
 function App() {
   const [currentPlayer, setCurrentPlayer] = useState<Team>('cho'); // 초 또는 한
@@ -47,39 +49,19 @@ function App() {
         }}
       >
         {/* <ComponentPreview /> */}
-        <div className='title-container'>
-          <h1 style={{ color: COLORS.ui.text }}>장기 (Janggi)</h1>
-          <h3 style={{ color: COLORS.ui.textSecondary }}>Korean Chess</h3>
-        </div>
+        <Title />
         <InfoBox>
-          <div className='infobox-container'>
-            <Piece type='왕' team={currentPlayer} size={48} />
-            <p
-              style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: COLORS.team[currentPlayer],
-              }}
-            >
-              {currentPlayer === 'cho' ? '초' : '한'}의 차례입니다
-            </p>
-            <Button onClick={handleNewGame}>새 게임</Button>
-          </div>
+          <TeamInfoBox
+            currentPlayer={currentPlayer}
+            handleNewGame={handleNewGame}
+          />
         </InfoBox>
 
         <div className='board-container'>
           {gameId !== null && <Board gameId={gameId} />}
         </div>
         <InfoBox>
-          <h3>게임 방법:</h3>
-          <ul className='game-information'>
-            <li>
-              자신의 기물을 클릭하여 선택하고, 이동 가능한 위치를 확인하세요
-            </li>
-            <li>파란 점이 표시된 위치로 이동할 수 있습니다</li>
-            <li>상대의 왕을 잡으면 승리합니다</li>
-            <li>초는 녹색, 한은 빨간색으로 표시됩니다</li>
-          </ul>
+          <GameInfoBox />
         </InfoBox>
       </div>
       {!isEnabled && (
@@ -92,51 +74,22 @@ function App() {
             zIndex: 9999,
           }}
         >
-          <Modal width='550px' height='500px' backgroundColor='#FFF8DC'>
-            <h2
-              style={{
-                color: COLORS.ui.text,
-                margin: '0 0 8px 0',
-                fontSize: '24px',
-              }}
-            >
-              장기 게임에 오신 것을 환영합니다!
-            </h2>
-            <p
-              style={{
-                color: COLORS.ui.textSecondary,
-                fontSize: '14px',
-              }}
-            >
-              플레이어 이름을 입력하고 게임을 시작하세요.
-            </p>
-            <div className='input-container'>
-              <div className='input-wrapper'>
-                <label className='player-label cho'>초 진영 (선공)</label>
-                <InputText
-                  placeholder='초 진영의 이름을 입력하세요'
-                  value={player1Name}
-                  onChange={setPlayer1Name}
-                  borderColor='#2e7d32'
-                />
-                <p className='input-note'>* 초 진영이 먼저 시작합니다</p>
-              </div>
-              <div className='input-wrapper'>
-                <label className='player-label han'>한 진영 (후공)</label>
-                <InputText
-                  placeholder='한 진영의 이름을 입력하세요'
-                  value={player2Name}
-                  onChange={setPlayer2Name}
-                  borderColor='#c62828'
-                />
-              </div>
-            </div>
-            <Button
-              onClick={() => startNewGame()}
-              disabled={!player1Name.trim() || !player2Name.trim()}
-            >
-              게임 시작
-            </Button>
+          <Modal backgroundColor={COLORS.background}>
+            <PlayerInputModal
+              player1Name={player1Name}
+              player2Name={player2Name}
+              onPlayer1Change={setPlayer1Name}
+              onPlayer2Change={setPlayer2Name}
+              onStartGame={startNewGame}
+            />
+          </Modal>
+          <Modal
+            width='550px'
+            height='300px'
+            backgroundColor='#ffe270'
+            border='4px solid #dcb000'
+          >
+            <WinnerShowModal currentPlayer={currentPlayer} />
           </Modal>
         </div>
       )}
