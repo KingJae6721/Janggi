@@ -1,0 +1,40 @@
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  margin: 20px 0;
+}
+h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+p {
+  font-size: 14px;
+}
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.player-label {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.player-label.cho {
+  color: #2e7d32; /* 초 진영 색상 (녹색 계열) */
+}
+
+.player-label.han {
+  color: #c62828; /* 한 진영 색상 (빨간색 계열) */
+}
+
+.input-note {
+  font-size: 12px;
+  color: #d2691e;
+  margin: 0;
+  padding-left: 4px;
+}
