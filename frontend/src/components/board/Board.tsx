@@ -1,226 +1,255 @@
+import { useState, useEffect, useRef } from 'react';
+import './Board.css';
+
 import { BoardCell } from './BoardCell';
 import { Piece } from '../pieces/Piece';
-import './Board.css';
-import { useState, useEffect, useRef } from 'react';
+import { Button } from '../common/Button';
+
+import type { Move } from '../../types/move';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
 import { getLegalMoves, isCheck } from '../../utils/janggiRules';
-import { addMove, getBoard, endGame } from '../../api/gameApi'; // 상단에 추가
+import { addMove, endGame, getMoves } from '../../api/gameApi';
 
 type BoardProps = {
   gameId: number;
 };
 
+type TurnInfo = {
+  count: number;
+  turn: 'cho' | 'han';
+};
+
 export const Board = ({ gameId }: BoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
 
-  // 보드 상태: 2차원 배열로 각 칸에 기물(PieceData) 또는 null 저장
-  const [pieceBoard, setPieceBoard] =
-    useState<(PieceData | null)[][]>(initialBoard);
-
-  // 현재 선택된 기물
+  // 상태 관리
+  const [pieceBoard, setPieceBoard] = useState<(PieceData | null)[][]>(initialBoard);
   const [selected, setSelected] = useState<PieceData | null>(null);
-
-  // 턴 정보: 몇 번째 턴인지와 현재 턴의 진영(초/한)
-  const [turnInfo, setTurnInfo] = useState<{
-    count: number;
-    turn: 'cho' | 'han';
-  }>({
-    count: 1,
-    turn: 'cho',
-  });
-
-  //전 턴에 내왕이 장군상태인지 체크
-  const [wasCheck, setWasCheck] = useState<{ cho: boolean; han: boolean }>({
-    cho: false,
-    han: false,
-  });
+  const [turnInfo, setTurnInfo] = useState<TurnInfo>({ count: 1, turn: 'cho' });
+  const [wasCheck, setWasCheck] = useState<{ cho: boolean; han: boolean }>({ cho: false, han: false });
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<'cho' | 'han' | null>(null);
 
-  // Board가 마운트될 때 스크롤 이동
+  // 히스토리 관련 상태
+  const [moves, setMoves] = useState<Move[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isReplay, setIsReplay] = useState(false); // 복기 모드 여부
+
+  // 마운트 시 스크롤 이동
   useEffect(() => {
-    if (boardRef.current) {
-      boardRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
+    boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  // 현재 보드에서 기물만 추출(flat으로 1차원 배열로 변환)
+  // 현재 보드에서 기물 추출
   const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
 
-  // 선택된 기물의 합법적인 이동 후보 계산
-  const possibleMoves = selected ? getLegalMoves(selected, pieces) : [];
+  // 선택된 기물의 이동 후보 (복기 모드에서는 비활성화)
+  const possibleMoves = selected && !isReplay ? getLegalMoves(selected, pieces) : [];
 
   // 기물 선택 핸들러
   const handleSelect = (piece: PieceData) => {
-    // 이미 선택된 기물을 다시 클릭하면 선택 해제
+    if (isReplay) return; // 복기 모드에서는 선택 불가
     if (selected?.x === piece.x && selected?.y === piece.y) {
       setSelected(null);
     } else {
-      // 새로운 기물 선택
       setSelected(piece);
     }
   };
-const movePiece = async (toX: number, toY: number) => {
-  if (!selected || gameOver) return;
 
-  let newBoard: (PieceData | null)[][] = [];
+  // 이동 기록 불러오기
+  const fetchMoves = async () => {
+    const data = await getMoves(gameId);
+    setMoves(data);
+    setCurrentIndex(0);
+    setPieceBoard(initialBoard);
+    setIsReplay(true); // 복기 모드 활성화
+  };
 
-  // 1. 보드 상태 업데이트
-  setPieceBoard((prev) => {
-    newBoard = prev.map((row) => row.slice()); // 깊은 복사
-    newBoard[selected.y][selected.x] = null;   // 원래 위치 비우기
-    newBoard[toY][toX] = { ...selected, x: toX, y: toY }; // 새 위치에 기물 배치
-    return newBoard;
-  });
+  // 복기 모드 종료
+  const exitReplay = () => {
+    setIsReplay(false);
+    setMoves([]);
+    setCurrentIndex(0);
+    setPieceBoard(initialBoard);
+  };
 
-  // 선택 해제
-  setSelected(null);
+  // 턴 기반 팀 계산
+  const getTeamByTurn = (turn: number): 'cho' | 'han' => {
+    return turn % 2 === 1 ? 'cho' : 'han';
+  };
 
-  // 2. 이동 기록 저장
-  await addMove(gameId, {
-    turn: turnInfo.count,
-    piece: selected.type,
-    fromX: selected.x,
-    fromY: selected.y,
-    toX,
-    toY,
-    team: selected.team,
-  });
+  // 히스토리 적용
+  const applyMoves = (index: number) => {
+    const newBoard: (PieceData | null)[][] = initialBoard.map((row) => row.slice());
 
-  // 3. 왕 존재 여부 확인 (게임 종료 조건)
-  const flatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
-  const choKing = flatBoard.find((p) => p.type === '왕' && p.team === 'cho');
-  const hanKing = flatBoard.find((p) => p.type === '왕' && p.team === 'han');
+    moves.slice(0, index).forEach((move) => {
+      const team = getTeamByTurn(move.turn);
+      newBoard[move.fromY][move.fromX] = null;
+      newBoard[move.toY][move.toX] = {
+        type: move.piece,
+        team,
+        x: move.toX,
+        y: move.toY,
+      };
+    });
 
-  if (!choKing) {
-    setGameOver(true);
-    setWinner('han');
-    await endGame(gameId, 'han');
-    return;
-  }
-  if (!hanKing) {
-    setGameOver(true);
-    setWinner('cho');
-    await endGame(gameId, 'cho');
-    return;
-  }
+    setPieceBoard(newBoard);
+  };
 
-  // 4. 체크메이트 판정
-  const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
-  const king = flatBoard.find((p) => p.type === '왕' && p.team === nextTurn);
-  const kingMoves = king ? getLegalMoves(king, flatBoard) : [];
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      applyMoves(newIndex);
+    }
+  };
 
-  const canEscape = kingMoves.some((move) => {
-    const simulated = flatBoard
-      .filter((p) => !(p.x === move.x && p.y === move.y)) // 이동 위치에 있던 상대 기물 제거
-      .map((p) =>
-        p.x === king?.x && p.y === king?.y
-          ? { ...p, x: move.x, y: move.y }
-          : { ...p }
-      );
-    return !isCheck(simulated, nextTurn);
-  });
+  const handleNext = () => {
+    if (currentIndex < moves.length) {
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      applyMoves(newIndex);
+    }
+  };
 
-  const isCheckmate = isCheck(flatBoard, nextTurn) && !canEscape;
-  if (isCheckmate) {
-    console.log('체크메이트!!');
-    setGameOver(true);
-    setWinner(turnInfo.turn); // 현재 턴 플레이어 승리
-    await endGame(gameId, turnInfo.turn);
-    return;
-  }
+  // 실제 게임 중 이동 처리
+  const movePiece = async (toX: number, toY: number) => {
+    if (isReplay || !selected || gameOver) return; // 복기 모드에서는 실행 안 함
 
-  // 5. 멍군 판정 (내 턴에서 장군 해소 여부 확인)
-  const currentTurn = turnInfo.turn;
-  const checkNow = isCheck(flatBoard, currentTurn);
-  if (!checkNow && wasCheck[currentTurn]) {
-    console.log('멍군!');
-  }
+    let newBoard: (PieceData | null)[][] = [];
 
-  // 6. 턴 교체
-  const nextCount = turnInfo.count + 1;
-  const checkNext = isCheck(flatBoard, nextTurn);
+    setPieceBoard((prev) => {
+      newBoard = prev.map((row) => row.slice());
+      newBoard[selected.y][selected.x] = null;
+      newBoard[toY][toX] = { ...selected, x: toX, y: toY };
+      return newBoard;
+    });
 
-  if (checkNext) {
-    console.log(`${nextTurn} 왕이 장군 상태입니다!`);
-  }
+    setSelected(null);
 
-  setWasCheck((prevWas) => ({
-    ...prevWas,
-    [currentTurn]: checkNow,
-    [nextTurn]: checkNext,
-  }));
+    await addMove(gameId, {
+      turn: turnInfo.count,
+      piece: selected.type,
+      fromX: selected.x,
+      fromY: selected.y,
+      toX,
+      toY,
+      team: selected.team,
+    });
 
-  setTurnInfo({ count: nextCount, turn: nextTurn });
-};
+    const flatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
+    const choKing = flatBoard.find((p) => p.type === '왕' && p.team === 'cho');
+    const hanKing = flatBoard.find((p) => p.type === '왕' && p.team === 'han');
+
+    if (!choKing || !hanKing) {
+      setGameOver(true);
+      const winnerTeam = choKing ? 'cho' : 'han';
+      setWinner(winnerTeam);
+      await endGame(gameId, winnerTeam);
+      return;
+    }
+
+    const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
+    const king = flatBoard.find((p) => p.type === '왕' && p.team === nextTurn);
+    const kingMoves = king ? getLegalMoves(king, flatBoard) : [];
+
+    const canEscape = kingMoves.some((move) => {
+      const simulated = flatBoard
+        .filter((p) => !(p.x === move.x && p.y === move.y))
+        .map((p) =>
+          p.x === king?.x && p.y === king?.y ? { ...p, x: move.x, y: move.y } : { ...p }
+        );
+      return !isCheck(simulated, nextTurn);
+    });
+
+    if (isCheck(flatBoard, nextTurn) && !canEscape) {
+      setGameOver(true);
+      setWinner(turnInfo.turn);
+      await endGame(gameId, turnInfo.turn);
+      return;
+    }
+
+    const currentTurn = turnInfo.turn;
+    const checkNow = isCheck(flatBoard, currentTurn);
+    if (!checkNow && wasCheck[currentTurn]) {
+      console.log('멍군!');
+    }
+
+    const nextCount = turnInfo.count + 1;
+    const checkNext = isCheck(flatBoard, nextTurn);
+
+    setWasCheck((prevWas) => ({
+      ...prevWas,
+      [currentTurn]: checkNow,
+      [nextTurn]: checkNext,
+    }));
+
+    setTurnInfo({ count: nextCount, turn: nextTurn });
+  };
+
   return (
-    <div className='board' ref={boardRef}>
-      {/* 9x8 셀 그리드 (보드 바탕) */}
-      <div className='board-grid'>
-        {Array.from({ length: 9 }).map((_, rowIndex) => (
-          <div key={rowIndex} className='board-row'>
-            {Array.from({ length: 8 }).map((_, colIndex) => (
-              <BoardCell
-                key={`${rowIndex}-${colIndex}`}
-                x={colIndex}
-                y={rowIndex}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+    <>
+      {/* 히스토리 컨트롤 */}
+      <Button onClick={fetchMoves}>히스토리 불러오기</Button>
+      <Button onClick={handlePrev} disabled={!isReplay}>◀ 이전</Button>
+      <Button onClick={handleNext} disabled={!isReplay}>다음 ▶</Button>
+      {isReplay && <Button onClick={exitReplay}>복기 종료</Button>}
 
-      {/* 기물 렌더링 레이어 */}
-      <div className='pieces-layer'>
-        {pieces.map((piece, i) => {
-          const isSelected = selected?.x === piece.x && selected?.y === piece.y;
-          const isOpponent = piece.team !== turnInfo.turn; // 현재 턴과 다른 진영
-
-          return (
-            <div
-              key={`piece-${i}`}
-              className={`piece-position ${isSelected ? 'selected' : ''} ${
-                isOpponent ? 'unable' : ''
-              }`}
-              style={{
-                left: `${piece.x * 60}px`,
-                top: `${piece.y * 60}px`,
-              }}
-              onClick={() => {
-                if (!isOpponent) handleSelect(piece); // 상대 진영이면 클릭 막기
-              }}
-            >
-              <Piece type={piece.type} team={piece.team} size={50} />
+      <div className="board" ref={boardRef}>
+        {/* 9x8 셀 그리드 */}
+        <div className="board-grid">
+          {Array.from({ length: 9 }).map((_, rowIndex) => (
+            <div key={rowIndex} className="board-row">
+              {Array.from({ length: 8 }).map((_, colIndex) => (
+                <BoardCell key={`${rowIndex}-${colIndex}`} x={colIndex} y={rowIndex} />
+              ))}
             </div>
-          );
-        })}
-      </div>
-
-      {/* 이동 가능 위치 하이라이트 */}
-      {selected &&
-        possibleMoves.map((pos, i) => (
-          <div
-            key={`highlight-${i}`}
-            className='highlight-circle'
-            style={{
-              left: `${pos.x * 60}px`,
-              top: `${pos.y * 60}px`,
-            }}
-            onClick={() => movePiece(pos.x, pos.y)}
-          />
-        ))}
-      {/*게임오버*/}
-      {gameOver && (
-        <div>
-          {winner
-            ? `${winner === 'cho' ? '초' : '한'} 진영 승리!`
-            : '무승부입니다'}
+          ))}
         </div>
-      )}
-    </div>
+
+        {/* 기물 레이어 */}
+        <div className="pieces-layer">
+          {pieceBoard.flat().map((piece, i) =>
+            piece ? (
+              <div
+                key={`piece-${i}`}
+                className="piece-position"
+                style={{ left: `${piece.x * 60}px`, top: `${piece.y * 60}px` }}
+                onClick={() => {
+                  if (!isReplay) {
+                    const isOpponent = piece.team !== turnInfo.turn;
+                    if (!isOpponent) handleSelect(piece);
+                  }
+                }}
+              >
+                <Piece type={piece.type} team={piece.team} size={50} />
+              </div>
+            ) : null
+          )}
+        </div>
+
+        {/* 이동 가능 위치 하이라이트 */}
+        
+        {selected && !isReplay &&
+          possibleMoves.map((pos, i) => (
+            <div
+              key={`highlight-${i}`}
+              className="highlight-circle"
+              style={{ left: `${pos.x * 60}px`, top: `${pos.y * 60}px` }}
+              onClick={() => movePiece(pos.x, pos.y)}
+            />
+          ))}
+
+        {/* 게임 종료 배너 */}
+        {gameOver && (
+          <div>
+            {winner
+              ? `${winner === 'cho' ? '초' : '한'} 진영 승리!`
+              : '무승부입니다'}
+          </div>
+        )}
+      </div>
+    </>
   );
 };

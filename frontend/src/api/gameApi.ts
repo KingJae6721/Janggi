@@ -20,5 +20,9 @@ export const endGame = async (gameId: number, winner: string) => {
   const res = await axios.put(`/game/${gameId}/end`, { winner });
   return res.data;
 };
-
+ // 특정 게임의 이동 기록 조회
+export const getMoves = async (gameId: number)  => {
+  const res = await axios.get<Move[]>(`/game/${gameId}/moves`);
+  return res.data;
+};
   
