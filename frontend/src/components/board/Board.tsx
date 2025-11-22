@@ -65,22 +65,22 @@ export const Board = ({ gameId }: BoardProps) => {
     }
   };
 const movePiece = async (toX: number, toY: number) => {
-  if (!selected) return;
+  if (!selected || gameOver) return;
 
-    let newBoard: (PieceData | null)[][] = [];
+  let newBoard: (PieceData | null)[][] = [];
 
-  // 보드 상태 업데이트
+  // 1. 보드 상태 업데이트
   setPieceBoard((prev) => {
     newBoard = prev.map((row) => row.slice()); // 깊은 복사
-    newBoard[selected.y][selected.x] = null; // 원래 위치 비우기
+    newBoard[selected.y][selected.x] = null;   // 원래 위치 비우기
     newBoard[toY][toX] = { ...selected, x: toX, y: toY }; // 새 위치에 기물 배치
     return newBoard;
   });
 
-    // 선택 해제
-    setSelected(null);
+  // 선택 해제
+  setSelected(null);
 
-  // ✅ 이동 기록 저장
+  // 2. 이동 기록 저장
   await addMove(gameId, {
     turn: turnInfo.count,
     piece: selected.type,
@@ -91,7 +91,7 @@ const movePiece = async (toX: number, toY: number) => {
     team: selected.team,
   });
 
-  // 이동 후 보드 상태에서 왕이 사라졌는지 확인
+  // 3. 왕 존재 여부 확인 (게임 종료 조건)
   const flatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
   const choKing = flatBoard.find((p) => p.type === '왕' && p.team === 'cho');
   const hanKing = flatBoard.find((p) => p.type === '왕' && p.team === 'han');
@@ -99,23 +99,24 @@ const movePiece = async (toX: number, toY: number) => {
   if (!choKing) {
     setGameOver(true);
     setWinner('han');
+    await endGame(gameId, 'han');
     return;
   }
-
   if (!hanKing) {
     setGameOver(true);
     setWinner('cho');
+    await endGame(gameId, 'cho');
     return;
   }
 
-  // 체크메이트 판정
+  // 4. 체크메이트 판정
   const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
   const king = flatBoard.find((p) => p.type === '왕' && p.team === nextTurn);
   const kingMoves = king ? getLegalMoves(king, flatBoard) : [];
 
   const canEscape = kingMoves.some((move) => {
     const simulated = flatBoard
-      .filter((p) => !(p.x === move.x && p.y === move.y)) // 상대 기물 제거
+      .filter((p) => !(p.x === move.x && p.y === move.y)) // 이동 위치에 있던 상대 기물 제거
       .map((p) =>
         p.x === king?.x && p.y === king?.y
           ? { ...p, x: move.x, y: move.y }
@@ -125,37 +126,36 @@ const movePiece = async (toX: number, toY: number) => {
   });
 
   const isCheckmate = isCheck(flatBoard, nextTurn) && !canEscape;
-
   if (isCheckmate) {
+    console.log('체크메이트!!');
     setGameOver(true);
-    setWinner(turnInfo.turn); // 현재 턴의 플레이어가 승자
+    setWinner(turnInfo.turn); // 현재 턴 플레이어 승리
+    await endGame(gameId, turnInfo.turn);
     return;
   }
 
-  // 턴 교체
-  setTurnInfo((prev) => {
-    const nextTurn = prev.turn === 'cho' ? 'han' : 'cho';
-    const nextCount = prev.count + 1;
+  // 5. 멍군 판정 (내 턴에서 장군 해소 여부 확인)
+  const currentTurn = turnInfo.turn;
+  const checkNow = isCheck(flatBoard, currentTurn);
+  if (!checkNow && wasCheck[currentTurn]) {
+    console.log('멍군!');
+  }
 
-    const flatBoard = newBoard
-      .flat()
-      .filter((p): p is PieceData => p !== null);
+  // 6. 턴 교체
+  const nextCount = turnInfo.count + 1;
+  const checkNext = isCheck(flatBoard, nextTurn);
 
-    const checkNow = isCheck(flatBoard, nextTurn);
+  if (checkNext) {
+    console.log(`${nextTurn} 왕이 장군 상태입니다!`);
+  }
 
-    if (checkNow) {
-      console.log(`${nextTurn} 왕이 장군 상태입니다!`);
-    } else if (wasCheck[nextTurn]) {
-      console.log('멍군!');
-    }
+  setWasCheck((prevWas) => ({
+    ...prevWas,
+    [currentTurn]: checkNow,
+    [nextTurn]: checkNext,
+  }));
 
-    setWasCheck((prevWas) => ({
-      ...prevWas,
-      [nextTurn]: checkNow,
-    }));
-
-    return { count: nextCount, turn: nextTurn };
-  });
+  setTurnInfo({ count: nextCount, turn: nextTurn });
 };
   return (
     <div className='board' ref={boardRef}>
