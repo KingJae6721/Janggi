@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
 import { getLegalMoves, isCheck } from '../../utils/janggiRules';
-import { addMove, getBoard } from '../../api/gameApi'; // 상단에 추가
+import { addMove, getBoard, endGame } from '../../api/gameApi'; // 상단에 추가
 
 type BoardProps = {
   gameId: number;
@@ -87,12 +87,14 @@ const movePiece = async (toX: number, toY: number) => {
   if (!choKing) {
     setGameOver(true);
     setWinner('han');
+    await endGame(gameId, 'han'); 
     return;
   }
 
   if (!hanKing) {
     setGameOver(true);
     setWinner('cho');
+     await endGame(gameId, 'cho'); 
     return;
   }
 
@@ -115,8 +117,11 @@ const movePiece = async (toX: number, toY: number) => {
   const isCheckmate = isCheck(flatBoard, nextTurn) && !canEscape;
 
   if (isCheckmate) {
+    console.log("체크메이트!!");
+    
     setGameOver(true);
     setWinner(turnInfo.turn); // 현재 턴의 플레이어가 승자
+     await endGame(gameId, turnInfo.turn); 
     return;
   }
 

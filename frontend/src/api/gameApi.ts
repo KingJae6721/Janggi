@@ -15,3 +15,10 @@ export const addMove = async (gameId: number, moveData: Partial<Move>) => {
   const res = await axios.post(`/game/${gameId}/moves`, moveData);
   return res.data;
 };
+
+export const endGame = async (gameId: number, winner: string) => {
+  const res = await axios.put(`/game/${gameId}/end`, { winner });
+  return res.data;
+};
+
+  
