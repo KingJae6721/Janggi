@@ -36,10 +36,11 @@
 /* 선택된 기물에 hover 효과 유지 */
 .piece-position.selected .piece-container {
   transform: scale(1.2);
+  /* filter: brightness(120%); */
 }
 
 .piece-position.unable {
-  filter: brightness(50%);
+  filter: brightness(80%) grayscale(30%);
   pointer-events: none;
 }
 

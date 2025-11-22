@@ -1,0 +1,8 @@
+.game-information {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 15px;
+  color: #5d4037;
+  font-size: 14px;
+  line-height: 1.5;
+}

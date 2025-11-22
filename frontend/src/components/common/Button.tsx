@@ -13,7 +13,12 @@ export const Button = ({
 }: ButtonProps) => {
   return (
     <div className='button-container'>
-      <button className='button' onClick={onClick} disabled={disabled}>
+      <button
+        type='button'
+        className='button'
+        onClick={onClick}
+        disabled={disabled}
+      >
         {children}
       </button>
     </div>
