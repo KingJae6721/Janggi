@@ -109,6 +109,13 @@ export class GameService {
     return await this.gameRepository.save(game);
   }
 
+  async getGamesByPlayer(name: string): Promise<Game[]> {
+    return this.gameRepository.find({
+      where: [{ player1: name }, { player2: name }],
+      order: { startedAt: 'DESC' },
+    });
+  }
+
   //gameId로 검색
   async getMovesByGame(gameId: number): Promise<Move[]> {
     const game = await this.gameRepository.findOne({

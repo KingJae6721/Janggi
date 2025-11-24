@@ -31,6 +31,11 @@ export class GameController {
     return this.gameService.endGame(id, winner);
   }
 
+  @Get('player/:name')
+  async getGamesByPlayer(@Param('name') name: string): Promise<Game[]> {
+    return this.gameService.getGamesByPlayer(name);
+  }
+
   // 특정 게임의 이동 기록 조회
   @Get(':id/moves')
   async getMoves(@Param('id') id: number): Promise<Move[]> {

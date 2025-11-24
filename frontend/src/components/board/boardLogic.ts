@@ -1,22 +1,25 @@
 import type { Dispatch, SetStateAction } from 'react';
-
 import type { PieceData } from '../../types/types';
 import type { Move } from '../../types/move';
 import { initialBoard } from '../../constants/initialPieces';
 import { getLegalMoves, isCheck } from '../../utils/janggiRules';
 import { addMove, endGame } from '../../api/gameApi';
 
-
+// 턴 번호 → 팀 변환
 export const getTeamByTurn = (turn: number): 'cho' | 'han' => {
   return turn % 2 === 1 ? 'cho' : 'han';
 };
 
-// 이동 기록 적용 + 턴 정보 반환
 export const applyMoves = (
   moves: Move[],
   index: number
-): { board: (PieceData | null)[][]; turnInfo: { count: number; turn: 'cho' | 'han' } } => {
-  const newBoard: (PieceData | null)[][] = initialBoard.map((row) => row.slice());
+): {
+  board: (PieceData | null)[][];
+  turnInfo: { count: number; turn: 'cho' | 'han' };
+} => {
+  const newBoard: (PieceData | null)[][] = initialBoard.map((row) =>
+    row.slice()
+  );
 
   moves.slice(0, index).forEach((move) => {
     const team = getTeamByTurn(move.turn);
@@ -37,9 +40,11 @@ export const applyMoves = (
     turnInfo: { count: index + 1, turn: nextTurn },
   };
 };
-
 // 체크메이트 판정
-export const checkMate = (flatBoard: PieceData[], turn: 'cho' | 'han'): boolean => {
+export const checkMate = (
+  flatBoard: PieceData[],
+  turn: 'cho' | 'han'
+): boolean => {
   const king = flatBoard.find((p) => p.type === '왕' && p.team === turn);
   if (!king) return true;
 
@@ -48,7 +53,9 @@ export const checkMate = (flatBoard: PieceData[], turn: 'cho' | 'han'): boolean 
     const simulated = flatBoard
       .filter((p) => !(p.x === move.x && p.y === move.y))
       .map((p) =>
-        p.x === king.x && p.y === king.y ? { ...p, x: move.x, y: move.y } : { ...p }
+        p.x === king.x && p.y === king.y
+          ? { ...p, x: move.x, y: move.y }
+          : { ...p }
       );
     return !isCheck(simulated, turn);
   });
@@ -56,8 +63,7 @@ export const checkMate = (flatBoard: PieceData[], turn: 'cho' | 'han'): boolean 
   return isCheck(flatBoard, turn) && !canEscape;
 };
 
-// 실제 게임 중 이동 처리 로직
-// 함수형 업데이트 사용
+// 실제 이동 처리 로직
 export const movePieceLogic = async (
   gameId: number,
   toX: number,
@@ -65,16 +71,16 @@ export const movePieceLogic = async (
   selected: PieceData,
   turnInfo: { count: number; turn: 'cho' | 'han' },
   wasCheck: { cho: boolean; han: boolean },
-  setPieceBoard: Dispatch<SetStateAction<(PieceData | null)[][]>>, // ✅ 수정
+  setPieceBoard: Dispatch<SetStateAction<(PieceData | null)[][]>>,
   setSelected: Dispatch<SetStateAction<PieceData | null>>,
   setGameOver: Dispatch<SetStateAction<boolean>>,
   setWinner: Dispatch<SetStateAction<'cho' | 'han' | null>>,
   setWasCheck: Dispatch<SetStateAction<{ cho: boolean; han: boolean }>>,
   setTurnInfo: Dispatch<SetStateAction<{ count: number; turn: 'cho' | 'han' }>>
 ) => {
-
   let newBoard: (PieceData | null)[][] = [];
 
+  // 1. 기물 이동
   setPieceBoard((prev) => {
     newBoard = prev.map((row) => row.slice());
     newBoard[selected.y][selected.x] = null;
@@ -84,6 +90,7 @@ export const movePieceLogic = async (
 
   setSelected(null);
 
+  // 2. DB에 이동 기록 저장
   await addMove(gameId, {
     turn: turnInfo.count,
     piece: selected.type,
@@ -94,6 +101,7 @@ export const movePieceLogic = async (
     team: selected.team,
   });
 
+  // 3. 왕 존재 여부 확인
   const flatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
   const choKing = flatBoard.find((p) => p.type === '왕' && p.team === 'cho');
   const hanKing = flatBoard.find((p) => p.type === '왕' && p.team === 'han');
@@ -106,6 +114,7 @@ export const movePieceLogic = async (
     return;
   }
 
+  // 4. 체크메이트 판정
   const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
   if (checkMate(flatBoard, nextTurn)) {
     setGameOver(true);
@@ -114,6 +123,7 @@ export const movePieceLogic = async (
     return;
   }
 
+  // 5. 체크/멍군 처리
   const currentTurn = turnInfo.turn;
   const checkNow = isCheck(flatBoard, currentTurn);
   if (!checkNow && wasCheck[currentTurn]) {
@@ -129,5 +139,6 @@ export const movePieceLogic = async (
     [nextTurn]: checkNext,
   }));
 
+  // 6. 턴 정보 업데이트
   setTurnInfo({ count: nextCount, turn: nextTurn });
 };

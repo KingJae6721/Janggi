@@ -20,9 +20,17 @@ export const endGame = async (gameId: number, winner: string) => {
   const res = await axios.put(`/game/${gameId}/end`, { winner });
   return res.data;
 };
- // 특정 게임의 이동 기록 조회
-export const getMoves = async (gameId: number)  => {
+// 특정 게임의 이동 기록 조회
+export const getMoves = async (gameId: number) => {
   const res = await axios.get<Move[]>(`/game/${gameId}/moves`);
   return res.data;
 };
-  
+
+// frontend/api/gameApi.ts
+export async function getGamesByPlayer(playerName: string) {
+  const res = await fetch(`http://localhost:3000/game/player/${playerName}`);
+  if (!res.ok) {
+    throw new Error('게임 목록을 불러오지 못했습니다');
+  }
+  return await res.json();
+}

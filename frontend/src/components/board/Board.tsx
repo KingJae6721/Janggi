@@ -11,25 +11,28 @@ import { initialBoard } from '../../constants/initialPieces';
 import { getLegalMoves } from '../../utils/janggiRules';
 import { getMoves } from '../../api/gameApi';
 
-// 로직 모듈 import
 import { applyMoves, movePieceLogic } from './boardLogic';
+
+import type { Dispatch, SetStateAction } from 'react';
 
 type BoardProps = {
   gameId: number;
   turnInfo: { count: number; turn: 'cho' | 'han' };
-  setTurnInfo: React.Dispatch<
-    React.SetStateAction<{ count: number; turn: 'cho' | 'han' }>
-  >;
-  setPlayer1Name: React.Dispatch<React.SetStateAction<string>>; // ✅ 추가
-  setPlayer2Name: React.Dispatch<React.SetStateAction<string>>; // ✅ 추가
+  setTurnInfo: Dispatch<SetStateAction<{ count: number; turn: 'cho' | 'han' }>>;
+  isReplay: boolean;
+  onExitReplay?: () => void;
+  setWinner: Dispatch<SetStateAction<'cho' | 'han' | null>>; // App에서 내려주는 setter
+  setGameOver: Dispatch<SetStateAction<boolean>>; // App에서 내려주는 setter
 };
 
 export const Board = ({
   gameId,
   turnInfo,
   setTurnInfo,
-  setPlayer1Name,
-  setPlayer2Name,
+  isReplay,
+  onExitReplay,
+  setWinner,
+  setGameOver,
 }: BoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -41,13 +44,10 @@ export const Board = ({
     cho: false,
     han: false,
   });
-  const [gameOver, setGameOver] = useState(false);
-  const [winner, setWinner] = useState<'cho' | 'han' | null>(null);
 
-  // 히스토리 관련 상태
+  // 복기 관련 상태
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isReplay, setIsReplay] = useState(false);
 
   useEffect(() => {
     boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -67,23 +67,18 @@ export const Board = ({
   };
 
   const fetchMoves = async () => {
-    const data = await getMoves(14);
+    const data = await getMoves(gameId);
     setMoves(data);
     setCurrentIndex(0);
     setPieceBoard(initialBoard);
-    setIsReplay(true);
-    setPlayer1Name('');
-    setPlayer2Name('복기모드-플레이어2');
   };
 
   const exitReplay = () => {
-    setIsReplay(false);
     setMoves([]);
     setCurrentIndex(0);
     setPieceBoard(initialBoard);
-
-    //턴 정보도 초기화
     setTurnInfo({ count: 1, turn: 'cho' });
+    if (onExitReplay) onExitReplay();
   };
 
   const handlePrev = () => {
@@ -92,7 +87,7 @@ export const Board = ({
       setCurrentIndex(newIndex);
       const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
       setPieceBoard(board);
-      setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
+      setTurnInfo(newTurnInfo);
     }
   };
 
@@ -102,12 +97,12 @@ export const Board = ({
       setCurrentIndex(newIndex);
       const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
       setPieceBoard(board);
-      setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
+      setTurnInfo(newTurnInfo);
     }
   };
 
   const movePiece = (toX: number, toY: number) => {
-    if (isReplay || !selected || gameOver) return;
+    if (isReplay || !selected) return;
     movePieceLogic(
       gameId,
       toX,
@@ -117,28 +112,23 @@ export const Board = ({
       wasCheck,
       setPieceBoard,
       setSelected,
-      setGameOver,
-      setWinner,
+      setGameOver, // ✅ App으로 전달
+      setWinner, // ✅ App으로 전달
       setWasCheck,
-      (newTurnInfo) => {
-        setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
-      }
+      (newTurnInfo) => setTurnInfo(newTurnInfo)
     );
   };
 
   return (
     <>
-      <div>
-        {/* 히스토리 컨트롤 */}
-        <Button onClick={fetchMoves}>히스토리 불러오기</Button>
-        <Button onClick={handlePrev} disabled={!isReplay}>
-          ◀ 이전
-        </Button>
-        <Button onClick={handleNext} disabled={!isReplay}>
-          다음 ▶
-        </Button>
-        {isReplay && <Button onClick={exitReplay}>복기 종료</Button>}
-      </div>
+      {isReplay && (
+        <div>
+          <Button onClick={fetchMoves}>히스토리 불러오기</Button>
+          <Button onClick={handlePrev}>◀ 이전</Button>
+          <Button onClick={handleNext}>다음 ▶</Button>
+          <Button onClick={exitReplay}>복기 종료</Button>
+        </div>
+      )}
 
       <div className='board' ref={boardRef}>
         {/* 9x8 셀 그리드 */}
@@ -190,15 +180,6 @@ export const Board = ({
               onClick={() => movePiece(pos.x, pos.y)}
             />
           ))}
-
-        {/* 게임 종료 배너 */}
-        {gameOver && (
-          <div>
-            {winner
-              ? `${winner === 'cho' ? '초' : '한'} 진영 승리!`
-              : '무승부입니다'}
-          </div>
-        )}
       </div>
     </>
   );

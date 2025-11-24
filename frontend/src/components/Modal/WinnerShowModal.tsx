@@ -1,18 +1,19 @@
 import { COLORS } from '../../constants/colors';
 import './WinnerShowModal.css';
 
-const WinnerShowModal = ({
-  currentPlayer,
-}: {
+type WinnerShowModalProps = {
   currentPlayer: 'cho' | 'han';
-}) => {
+  winnerName: string;
+};
+
+const WinnerShowModal = ({ currentPlayer, winnerName }: WinnerShowModalProps) => {
   return (
-    <>
-      <p style={{ color: COLORS.team[currentPlayer] }} className='winner-info'>
-        "이긴플레이어"가 이겼습니다!
+    <div>
+      <h2>게임 종료!</h2>
+      <p>
+        승자는 {winnerName} ({currentPlayer === 'cho' ? '초' : '한'}) 입니다 🎉
       </p>
-      {/* currentPlayer 대신 이긴 플레이어의 이름을 넣어주세요 */}
-    </>
+    </div>
   );
 };
 
