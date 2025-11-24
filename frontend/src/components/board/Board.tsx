@@ -53,15 +53,13 @@ export const Board = ({
 
   useEffect(() => {
     boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    useEffect;
-    // 폰트 로딩 감지 (예: Noto Sans KR)
+
     if (document.fonts) {
-      Promise.all([document.fonts.ready]).then(() => {
+      document.fonts.ready.then(() => {
         setIsReady(true);
       });
     } else {
-      // 폰트 API 미지원 브라우저는 바로 표시
-      setIsReady(true);
+      setTimeout(() => setIsReady(true), 0); // ✅ 비동기 처리
     }
   }, []);
 
