@@ -12,19 +12,31 @@ import { getLegalMoves } from '../../utils/janggiRules';
 import { getMoves } from '../../api/gameApi';
 
 // 로직 모듈 import
-import { getTeamByTurn, applyMoves, movePieceLogic } from './boardLogic';
+import { applyMoves, movePieceLogic } from './boardLogic';
 
-type BoardProps = { gameId: number };
-type TurnInfo = { count: number; turn: 'cho' | 'han' };
+type BoardProps = {
+  gameId: number;
+  turnInfo: { count: number; turn: 'cho' | 'han' };
+  setTurnInfo: React.Dispatch<
+    React.SetStateAction<{ count: number; turn: 'cho' | 'han' }>
+  >;
+  setPlayer1Name: React.Dispatch<React.SetStateAction<string>>; // ✅ 추가
+  setPlayer2Name: React.Dispatch<React.SetStateAction<string>>; // ✅ 추가
+};
 
-export const Board = ({ gameId }: BoardProps) => {
+export const Board = ({
+  gameId,
+  turnInfo,
+  setTurnInfo,
+  setPlayer1Name,
+  setPlayer2Name,
+}: BoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
 
   // 상태 관리
   const [pieceBoard, setPieceBoard] =
     useState<(PieceData | null)[][]>(initialBoard);
   const [selected, setSelected] = useState<PieceData | null>(null);
-  const [turnInfo, setTurnInfo] = useState<TurnInfo>({ count: 1, turn: 'cho' });
   const [wasCheck, setWasCheck] = useState<{ cho: boolean; han: boolean }>({
     cho: false,
     han: false,
@@ -55,11 +67,13 @@ export const Board = ({ gameId }: BoardProps) => {
   };
 
   const fetchMoves = async () => {
-    const data = await getMoves(gameId);
+    const data = await getMoves(14);
     setMoves(data);
     setCurrentIndex(0);
     setPieceBoard(initialBoard);
     setIsReplay(true);
+    setPlayer1Name('');
+    setPlayer2Name('복기모드-플레이어2');
   };
 
   const exitReplay = () => {
@@ -67,15 +81,18 @@ export const Board = ({ gameId }: BoardProps) => {
     setMoves([]);
     setCurrentIndex(0);
     setPieceBoard(initialBoard);
+
+    //턴 정보도 초기화
+    setTurnInfo({ count: 1, turn: 'cho' });
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
       const newIndex = currentIndex - 1;
       setCurrentIndex(newIndex);
-      const { board, turnInfo } = applyMoves(moves, newIndex);
+      const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
       setPieceBoard(board);
-      setTurnInfo(turnInfo); // ✅ 턴 정보도 갱신
+      setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
     }
   };
 
@@ -83,9 +100,9 @@ export const Board = ({ gameId }: BoardProps) => {
     if (currentIndex < moves.length) {
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
-      const { board, turnInfo } = applyMoves(moves, newIndex);
+      const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
       setPieceBoard(board);
-      setTurnInfo(turnInfo); // ✅ 턴 정보도 갱신
+      setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
     }
   };
 
@@ -103,21 +120,25 @@ export const Board = ({ gameId }: BoardProps) => {
       setGameOver,
       setWinner,
       setWasCheck,
-      setTurnInfo
+      (newTurnInfo) => {
+        setTurnInfo(newTurnInfo); // ✅ App으로 턴 정보 반영
+      }
     );
   };
 
   return (
     <>
-      {/* 히스토리 컨트롤 */}
-      <Button onClick={fetchMoves}>히스토리 불러오기</Button>
-      <Button onClick={handlePrev} disabled={!isReplay}>
-        ◀ 이전
-      </Button>
-      <Button onClick={handleNext} disabled={!isReplay}>
-        다음 ▶
-      </Button>
-      {isReplay && <Button onClick={exitReplay}>복기 종료</Button>}
+      <div>
+        {/* 히스토리 컨트롤 */}
+        <Button onClick={fetchMoves}>히스토리 불러오기</Button>
+        <Button onClick={handlePrev} disabled={!isReplay}>
+          ◀ 이전
+        </Button>
+        <Button onClick={handleNext} disabled={!isReplay}>
+          다음 ▶
+        </Button>
+        {isReplay && <Button onClick={exitReplay}>복기 종료</Button>}
+      </div>
 
       <div className='board' ref={boardRef}>
         {/* 9x8 셀 그리드 */}
@@ -146,7 +167,6 @@ export const Board = ({ gameId }: BoardProps) => {
                 }`}
                 style={{ left: `${piece.x * 60}px`, top: `${piece.y * 60}px` }}
                 onClick={() => {
-                  // 복기 모드에서는 클릭 자체를 막음
                   if (!isReplay) {
                     const isOpponent = piece.team !== turnInfo.turn;
                     if (!isOpponent) handleSelect(piece);

@@ -1,41 +1,38 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-// import { ComponentPreview } from './pages/ComponentPreview';
 import { InfoBox } from './components/InfoBox/InfoBox';
 import { Board } from './components/board/Board';
 import { COLORS } from './constants/colors';
 import type { Team } from './types/types';
 import { Modal } from './components/Modal/Modal';
 import { PlayerInputModal } from './components/Modal/PlayerInputModal';
-import { getBoard, createGame, addMove } from './api/gameApi';
+import { createGame } from './api/gameApi';
 import GameInfoBox from './components/InfoBox/GameInfoBox';
 import TeamInfoBox from './components/InfoBox/TeamInfoBox';
 import WinnerShowModal from './components/Modal/WinnerShowModal';
 import Title from './components/common/Title';
 
 function App() {
-  const [currentPlayer, setCurrentPlayer] = useState<Team>('cho'); // 초 또는 한
+  // ✅ 턴과 카운트를 App에서 관리
+  const [turnInfo, setTurnInfo] = useState<{ count: number; turn: Team }>({
+    count: 1,
+    turn: 'cho',
+  });
+
   const [isEnabled, setIsEnabled] = useState(false);
   const [player1Name, setPlayer1Name] = useState('');
   const [player2Name, setPlayer2Name] = useState('');
   const [gameId, setGameId] = useState<number | null>(null);
-  useEffect(() => {
-    fetch('http://localhost:3000/game/board')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('현재 보드 상태:', data);
-      });
-  }, []);
 
   const handleNewGame = () => {
-    setCurrentPlayer('cho'); // 게임 초기화 시 초부터 시작
+    setTurnInfo({ count: 1, turn: 'cho' }); // ✅ 새 게임 시 초기화
   };
 
   const startNewGame = async () => {
     if (player1Name.trim() && player2Name.trim()) {
       setIsEnabled(true);
       const game = await createGame(player1Name, player2Name);
-      setGameId(game.id); // ✅ 생성된 게임의 ID 저장
+      setGameId(game.id);
     }
   };
 
@@ -48,22 +45,34 @@ function App() {
           opacity: isEnabled ? 1 : 0.5,
         }}
       >
-        {/* <ComponentPreview /> */}
         <Title />
         <InfoBox>
           <TeamInfoBox
-            currentPlayer={currentPlayer}
+            currentPlayer={turnInfo.turn}
+            turnCount={turnInfo.count}
             handleNewGame={handleNewGame}
+            player1Name={player1Name}
+            player2Name={player2Name}
           />
         </InfoBox>
 
         <div className='board-container'>
-          {gameId !== null && <Board gameId={gameId} />}
+          {gameId !== null && (
+            <Board
+              gameId={gameId}
+              turnInfo={turnInfo}
+              setTurnInfo={setTurnInfo} // ✅ Board에서 턴 변경 시 App으로 반영
+              setPlayer1Name={setPlayer1Name}  
+              setPlayer2Name={setPlayer2Name}  
+            />
+          )}
         </div>
+
         <InfoBox>
           <GameInfoBox />
         </InfoBox>
       </div>
+
       {!isEnabled && (
         <div
           style={{
@@ -89,7 +98,7 @@ function App() {
             backgroundColor='#ffe270'
             border='4px solid #dcb000'
           >
-            <WinnerShowModal currentPlayer={currentPlayer} />
+            <WinnerShowModal currentPlayer={turnInfo.turn} />
           </Modal>
         </div>
       )}
