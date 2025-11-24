@@ -35,6 +35,8 @@ export const Board = ({
   setGameOver,
 }: BoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
+  // 폰트 및 CSS 로딩 상태
+  const [isReady, setIsReady] = useState(false);
 
   // 상태 관리
   const [pieceBoard, setPieceBoard] =
@@ -51,6 +53,16 @@ export const Board = ({
 
   useEffect(() => {
     boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    useEffect;
+    // 폰트 로딩 감지 (예: Noto Sans KR)
+    if (document.fonts) {
+      Promise.all([document.fonts.ready]).then(() => {
+        setIsReady(true);
+      });
+    } else {
+      // 폰트 API 미지원 브라우저는 바로 표시
+      setIsReady(true);
+    }
   }, []);
 
   const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
@@ -130,7 +142,11 @@ export const Board = ({
         </div>
       )}
 
-      <div className='board' ref={boardRef}>
+      <div
+        className='board'
+        ref={boardRef}
+        style={{ visibility: isReady ? 'visible' : 'hidden' }}
+      >
         {/* 9x8 셀 그리드 */}
         <div className='board-grid'>
           {Array.from({ length: 9 }).map((_, rowIndex) => (

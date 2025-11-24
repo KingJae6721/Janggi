@@ -15,6 +15,7 @@ import { GameSelectModal } from './components/Modal/GameSelectModal';
 
 // ✅ Framer Motion import
 import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from './components/common/Button';
 
 function App() {
   const [turnInfo, setTurnInfo] = useState<{ count: number; turn: Team }>({
@@ -69,15 +70,17 @@ function App() {
         }}
       >
         <Title />
-        <InfoBox>
-          <TeamInfoBox
-            currentPlayer={turnInfo.turn}
-            turnCount={turnInfo.count}
-            handleNewGame={handleNewGame}
-            player1Name={player1Name}
-            player2Name={player2Name}
-          />
-        </InfoBox>
+        {gameId !== null && (
+          <InfoBox>
+            <TeamInfoBox
+              currentPlayer={turnInfo.turn}
+              turnCount={turnInfo.count}
+              handleNewGame={handleNewGame}
+              player1Name={player1Name}
+              player2Name={player2Name}
+            />
+          </InfoBox>
+        )}
 
         <div className='board-container'>
           {gameId !== null && (
@@ -93,9 +96,11 @@ function App() {
           )}
         </div>
 
-        <InfoBox>
-          <GameInfoBox />
-        </InfoBox>
+        {gameId !== null && (
+          <InfoBox>
+            <GameInfoBox />
+          </InfoBox>
+        )}
       </div>
 
       {!isEnabled && (
@@ -156,22 +161,19 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
-            {/* 왼쪽 화살표 */}
-        <button
-          onClick={() => setActiveModal(activeModal=='player'?'game':'player')}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '2rem',
-            cursor: 'pointer',
-            color: '#333',
-          }}
-        >
-          {activeModal=='player'?'리플레이':'새 게임'}
-        </button>
+          {/* 왼쪽 화살표 */}
+          <div className='replay_button'>
+            <Button
+              onClick={() =>
+                setActiveModal(activeModal == 'player' ? 'game' : 'player')
+              }
+            >
+              {activeModal == 'player' ? '리플레이' : '새 게임'}
+            </Button>
+          </div>
         </div>
       )}
-      
+
       {gameOver && (
         <div
           style={{
