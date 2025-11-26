@@ -59,4 +59,23 @@ export class GameController {
   ): boolean {
     return this.gameService.movePiece(from, to);
   }
+
+  // 이동 검증
+  @Post('validate-move')
+  validateMove(
+    @Body('from') from: { x: number; y: number },
+    @Body('to') to: { x: number; y: number },
+    @Body('board') board?: any[],
+  ): { valid: boolean; message?: string } {
+    return this.gameService.validateMove(from, to, board);
+  }
+
+  // 이동 가능한 위치 조회
+  @Post('possible-moves')
+  getPossibleMoves(
+    @Body('from') from: { x: number; y: number },
+    @Body('board') board?: any[],
+  ) {
+    return this.gameService.getPossibleMovesForPiece(from, board);
+  }
 }

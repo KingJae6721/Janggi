@@ -34,3 +34,22 @@ export async function getGamesByPlayer(playerName: string) {
   }
   return await res.json();
 }
+
+// 이동 검증
+export const validateMove = async (
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  board: any[]
+): Promise<{ valid: boolean; message?: string }> => {
+  const res = await axios.post('/game/validate-move', { from, to, board });
+  return res.data;
+};
+
+// 이동 가능한 위치 조회
+export const getPossibleMoves = async (
+  from: { x: number; y: number },
+  board: any[]
+): Promise<{ x: number; y: number }[]> => {
+  const res = await axios.post('/game/possible-moves', { from, board });
+  return res.data;
+};

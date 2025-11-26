@@ -8,8 +8,7 @@ import { Button } from '../common/Button';
 import type { Move } from '../../types/move';
 import type { PieceData } from '../../types/types';
 import { initialBoard } from '../../constants/initialPieces';
-import { getLegalMoves } from '../../utils/janggiRules';
-import { getMoves } from '../../api/gameApi';
+import { getMoves, getPossibleMoves as fetchPossibleMoves } from '../../api/gameApi';
 
 import { applyMoves, movePieceLogic } from './boardLogic';
 
@@ -51,6 +50,10 @@ export const Board = ({
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // 이동 가능한 위치 상태 (백엔드에서 가져옴)
+  const [possibleMoves, setPossibleMoves] = useState<{ x: number; y: number }[]>([]);
+  const [isLoadingMoves, setIsLoadingMoves] = useState(false);
+
   useEffect(() => {
     boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -64,15 +67,24 @@ export const Board = ({
   }, []);
 
   const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
-  const possibleMoves =
-    selected && !isReplay ? getLegalMoves(selected, pieces) : [];
 
-  const handleSelect = (piece: PieceData) => {
+  const handleSelect = async (piece: PieceData) => {
     if (isReplay) return;
     if (selected?.x === piece.x && selected?.y === piece.y) {
       setSelected(null);
+      setPossibleMoves([]);
     } else {
       setSelected(piece);
+      setIsLoadingMoves(true);
+      try {
+        const moves = await fetchPossibleMoves({ x: piece.x, y: piece.y }, pieces);
+        setPossibleMoves(moves);
+      } catch (error) {
+        console.error('이동 가능한 위치를 가져오는데 실패했습니다:', error);
+        setPossibleMoves([]);
+      } finally {
+        setIsLoadingMoves(false);
+      }
     }
   };
 

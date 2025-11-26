@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { COLORS } from '../constants/colors';
 import { Button } from '../components/common/Button';
-import { Modal } from '../components/common/Modal';
-import { Board } from '../components/board/Board';
+import { Modal } from '../components/Modal/Modal';
 import { FONTS } from '../constants/fonts';
 import './ComponentPreview.css';
-import { InfoBox } from '../components/common/InfoBox';
+import { InfoBox } from '../components/InfoBox/InfoBox';
 import { Piece } from '../components/pieces/Piece';
 
 export const ComponentPreview = () => {
@@ -82,10 +81,10 @@ export const ComponentPreview = () => {
           </div>
           <br />
           <h2>Modal</h2>
-          <Button>모달 열기</Button>
-          {isModalOpen && <Modal />}
+          <Button onClick={() => setIsModalOpen(!isModalOpen)}>모달 열기</Button>
+          {isModalOpen && <Modal>모달 내용</Modal>}
           <br />
-          <h2> Game Pieces</h2>
+          <h2>Game Pieces</h2>
           <div className='piece-showcase'>
             <Piece type='왕' team='han'></Piece>
             <p style={{ color: COLORS.piece.han }}>한 진영 (빨강)</p>
@@ -95,7 +94,7 @@ export const ComponentPreview = () => {
           <br />
           <h2>Game Board</h2>
           <div className='board-showcase'>
-            <Board />
+            <p>보드는 실제 게임 페이지에서 확인하세요.</p>
           </div>
         </div>
       </InfoBox>

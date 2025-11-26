@@ -3,6 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Game } from './game.entity';
 import { Move } from './move.entity';
 import { Repository } from 'typeorm';
+import {
+  JanggiRulesService,
+  PieceData,
+  Position,
+} from './janggi-rules.service';
 
 export interface Piece {
   type: '차' | '마' | '상' | '포' | '졸' | '왕' | '사';
@@ -19,6 +24,7 @@ export class GameService {
     private readonly gameRepository: Repository<Game>,
     @InjectRepository(Move)
     private readonly moveRepository: Repository<Move>,
+    private readonly janggiRulesService: JanggiRulesService,
   ) {
     this.initializeBoard();
   }
@@ -71,18 +77,72 @@ export class GameService {
     return this.board;
   }
 
+  // Piece를 PieceData로 변환
+  private convertToPieceData(pieces: Piece[]): PieceData[] {
+    return pieces.map((p) => ({
+      type: p.type,
+      team: p.team,
+      x: p.position.x,
+      y: p.position.y,
+    }));
+  }
+
+  // 이동 가능한 위치 조회
+  getPossibleMovesForPiece(
+    from: { x: number; y: number },
+    board?: PieceData[],
+  ): Position[] {
+    const currentBoard = board || this.convertToPieceData(this.board);
+    const piece = currentBoard.find((p) => p.x === from.x && p.y === from.y);
+
+    if (!piece) return [];
+
+    return this.janggiRulesService.getLegalMoves(piece, currentBoard);
+  }
+
+  // 이동 검증
+  validateMove(
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    board?: PieceData[],
+  ): { valid: boolean; message?: string } {
+    const currentBoard = board || this.convertToPieceData(this.board);
+    const piece = currentBoard.find((p) => p.x === from.x && p.y === from.y);
+
+    if (!piece) {
+      return { valid: false, message: '해당 위치에 기물이 없습니다.' };
+    }
+
+    const legalMoves = this.janggiRulesService.getLegalMoves(
+      piece,
+      currentBoard,
+    );
+    const isLegal = legalMoves.some((pos) => pos.x === to.x && pos.y === to.y);
+
+    if (!isLegal) {
+      return { valid: false, message: '유효하지 않은 이동입니다.' };
+    }
+
+    return { valid: true };
+  }
+
   // 말 이동 처리
   movePiece(
     from: { x: number; y: number },
     to: { x: number; y: number },
   ): boolean {
+    const validation = this.validateMove(from, to);
+
+    if (!validation.valid) {
+      return false;
+    }
+
     const piece = this.board.find(
       (p) => p.position.x === from.x && p.position.y === from.y,
     );
 
     if (!piece) return false;
 
-    // TODO: 규칙 검증 로직 추가 (말 종류별 이동 가능 여부)
     piece.position = to;
     return true;
   }

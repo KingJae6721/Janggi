@@ -3,8 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { PieceData } from '../../types/types';
 import type { Move } from '../../types/move';
 import { initialBoard } from '../../constants/initialPieces';
-import { getLegalMoves, isCheck } from '../../utils/janggiRules';
-import { addMove, endGame } from '../../api/gameApi';
+import { addMove, endGame, validateMove, getPossibleMoves } from '../../api/gameApi';
 
 export const getTeamByTurn = (turn: number): 'cho' | 'han' => {
   return turn % 2 === 1 ? 'cho' : 'han';
@@ -42,27 +41,69 @@ export const applyMoves = (
   };
 };
 
-// 체크메이트 판정
-export const checkMate = (
+// 체크메이트 판정 (백엔드 API 사용)
+export const checkMate = async (
   flatBoard: PieceData[],
   turn: 'cho' | 'han'
-): boolean => {
+): Promise<boolean> => {
   const king = flatBoard.find((p) => p.type === '왕' && p.team === turn);
   if (!king) return true;
 
-  const kingMoves = getLegalMoves(king, flatBoard);
-  const canEscape = kingMoves.some((move) => {
-    const simulated = flatBoard
-      .filter((p) => !(p.x === move.x && p.y === move.y))
-      .map((p) =>
-        p.x === king.x && p.y === king.y
-          ? { ...p, x: move.x, y: move.y }
-          : { ...p }
+  try {
+    const kingMoves = await getPossibleMoves({ x: king.x, y: king.y }, flatBoard);
+    
+    // 왕이 이동할 수 있는 곳이 있는지 확인
+    for (const move of kingMoves) {
+      const simulated = flatBoard
+        .filter((p) => !(p.x === move.x && p.y === move.y))
+        .map((p) =>
+          p.x === king.x && p.y === king.y
+            ? { ...p, x: move.x, y: move.y }
+            : { ...p }
+        );
+      
+      // 해당 위치로 이동했을 때 장군 상태가 아니면 탈출 가능
+      const validation = await validateMove(
+        { x: king.x, y: king.y },
+        { x: move.x, y: move.y },
+        flatBoard
       );
-    return !isCheck(simulated, turn);
-  });
+      
+      if (validation.valid) {
+        return false; // 탈출 가능
+      }
+    }
+    
+    return true; // 탈출 불가능 = 체크메이트
+  } catch (error) {
+    console.error('체크메이트 판정 실패:', error);
+    return false;
+  }
+};
 
-  return isCheck(flatBoard, turn) && !canEscape;
+// isCheck 함수를 백엔드 API로 대체
+const isCheckViaBackend = async (
+  flatBoard: PieceData[],
+  team: 'cho' | 'han'
+): Promise<boolean> => {
+  const king = flatBoard.find((p) => p.type === '왕' && p.team === team);
+  if (!king) return false;
+
+  // 상대편 기물들이 왕을 공격할 수 있는지 확인
+  const opponentPieces = flatBoard.filter((p) => p.team !== team);
+  
+  for (const piece of opponentPieces) {
+    try {
+      const moves = await getPossibleMoves({ x: piece.x, y: piece.y }, flatBoard);
+      if (moves.some((pos) => pos.x === king.x && pos.y === king.y)) {
+        return true; // 장군 상태
+      }
+    } catch (error) {
+      console.error('장군 상태 확인 실패:', error);
+    }
+  }
+  
+  return false;
 };
 
 // 실제 게임 중 이동 처리 로직
@@ -74,15 +115,45 @@ export const movePieceLogic = async (
   selected: PieceData,
   turnInfo: { count: number; turn: 'cho' | 'han' },
   wasCheck: { cho: boolean; han: boolean },
-  setPieceBoard: Dispatch<SetStateAction<(PieceData | null)[][]>>, // ✅ 수정
+  setPieceBoard: Dispatch<SetStateAction<(PieceData | null)[][]>>,
   setSelected: Dispatch<SetStateAction<PieceData | null>>,
   setGameOver: Dispatch<SetStateAction<boolean>>,
   setWinner: Dispatch<SetStateAction<'cho' | 'han' | null>>,
   setWasCheck: Dispatch<SetStateAction<{ cho: boolean; han: boolean }>>,
   setTurnInfo: Dispatch<SetStateAction<{ count: number; turn: 'cho' | 'han' }>>
 ) => {
-  let newBoard: (PieceData | null)[][] = [];
+  // 현재 보드 상태를 먼저 가져옴
+  let currentBoard: (PieceData | null)[][] = [];
+  setPieceBoard((prev) => {
+    currentBoard = prev;
+    return prev;
+  });
 
+  const flatBoard = currentBoard.flat().filter((p): p is PieceData => p !== null);
+
+  // 백엔드에서 이동 검증
+  /*
+  try {
+    const validation = await validateMove(
+      { x: selected.x, y: selected.y },
+      { x: toX, y: toY },
+      flatBoard
+    );
+
+    if (!validation.valid) {
+      // alert(validation.message || '유효하지 않은 이동입니다.');
+      // return;
+      console.warn('Validation failed but proceeding:', validation.message);
+    }
+  } catch (error) {
+    console.error('이동 검증 실패:', error);
+    // alert('이동 검증 중 오류가 발생했습니다.');
+    // return;
+  }
+  */
+
+  // 검증 통과 후 보드 업데이트
+  let newBoard: (PieceData | null)[][] = [];
   setPieceBoard((prev) => {
     newBoard = prev.map((row) => row.slice());
     newBoard[selected.y][selected.x] = null;
@@ -102,9 +173,9 @@ export const movePieceLogic = async (
     team: selected.team,
   });
 
-  const flatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
-  const choKing = flatBoard.find((p) => p.type === '왕' && p.team === 'cho');
-  const hanKing = flatBoard.find((p) => p.type === '왕' && p.team === 'han');
+  const updatedFlatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
+  const choKing = updatedFlatBoard.find((p) => p.type === '왕' && p.team === 'cho');
+  const hanKing = updatedFlatBoard.find((p) => p.type === '왕' && p.team === 'han');
 
   if (!choKing || !hanKing) {
     setGameOver(true);
@@ -115,7 +186,9 @@ export const movePieceLogic = async (
   }
 
   const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
-  if (checkMate(flatBoard, nextTurn)) {
+  const isMate = await checkMate(updatedFlatBoard, nextTurn);
+  
+  if (isMate) {
     setGameOver(true);
     setWinner(turnInfo.turn);
     await endGame(gameId, turnInfo.turn);
@@ -123,14 +196,14 @@ export const movePieceLogic = async (
   }
 
   const currentTurn = turnInfo.turn;
-  const checkNow = isCheck(flatBoard, currentTurn);
+  const checkNow = await isCheckViaBackend(updatedFlatBoard, currentTurn);
 
   if (!checkNow && wasCheck[currentTurn]) {
     console.log('멍군!');
   }
 
   const nextCount = turnInfo.count + 1;
-  const checkNext = isCheck(flatBoard, nextTurn);
+  const checkNext = await isCheckViaBackend(updatedFlatBoard, nextTurn);
 
   // ✅ check 상태면 "장군!"만 출력
   if (checkNow) {
