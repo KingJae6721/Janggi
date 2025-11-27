@@ -17,12 +17,12 @@ export class GameService {
     @InjectRepository(Move)
     private readonly moveRepository: Repository<Move>,
     private readonly janggiRulesService: JanggiRulesService,
-  ) {}
+  ) { }
 
   /** 초기 말 배치 */
   private initializeBoard(): PieceData[] {
     return [
-      // cho (아래쪽)
+      // cho (위쪽)
       { type: '차', team: 'cho', x: 0, y: 0 },
       { type: '상', team: 'cho', x: 1, y: 0 },
       { type: '마', team: 'cho', x: 2, y: 0 },
@@ -41,10 +41,10 @@ export class GameService {
       { type: '졸', team: 'cho', x: 6, y: 3 },
       { type: '졸', team: 'cho', x: 8, y: 3 },
 
-      // han (위쪽)
+      // han (아래쪽)
       { type: '차', team: 'han', x: 0, y: 9 },
-      { type: '마', team: 'han', x: 1, y: 9 },
-      { type: '상', team: 'han', x: 2, y: 9 },
+      { type: '마', team: 'han', x: 2, y: 9 },
+      { type: '상', team: 'han', x: 1, y: 9 },
       { type: '사', team: 'han', x: 3, y: 9 },
       { type: '왕', team: 'han', x: 4, y: 8 },
       { type: '사', team: 'han', x: 5, y: 9 },
