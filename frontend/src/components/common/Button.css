@@ -36,3 +36,14 @@
   background-color: #ccc;
   transform: scale(1);
 }
+
+/* Focus 스타일 */
+.button:focus {
+  outline: none;
+}
+
+.button:focus-visible {
+  outline: 3px solid #3e2723;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 184, 0, 0.3);
+}
