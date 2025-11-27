@@ -1,3 +1,4 @@
+
 import './Button.css';
 
 type ButtonProps = {
@@ -24,3 +25,4 @@ export const Button = ({
     </div>
   );
 };
+

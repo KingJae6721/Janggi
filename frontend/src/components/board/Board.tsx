@@ -1,155 +1,59 @@
-import { useState, useEffect, useRef } from 'react';
 import './Board.css';
+import { useGameContext } from '../../contexts/GameContext';
+import { useBoardState } from './hooks/useBoardState';
+import { useReplayState } from './hooks/useReplayState';
+import { usePieceMovement } from './hooks/usePieceMovement';
+import { BoardGrid } from './BoardGrid';
+import { PiecesLayer } from './PiecesLayer';
+import { MoveHighlights } from './MoveHighlights';
+import { ReplayControls } from './ReplayControls';
 
-import { BoardCell } from './BoardCell';
-import { Piece } from '../pieces/Piece';
-import { Button } from '../common/Button';
+export const Board = () => {
+  const { isReplay } = useGameContext();
 
-import type { Move } from '../../types/move';
-import type { PieceData } from '../../types/types';
-import { initialBoard } from '../../constants/initialPieces';
-import { getMoves, getPossibleMoves as fetchPossibleMoves } from '../../api/gameApi';
+  // 커스텀 훅으로 상태 관리
+  const boardState = useBoardState();
+  const {
+    boardRef,
+    isReady,
+    pieceBoard,
+    setPieceBoard,
+    selected,
+    setSelected,
+    wasCheck,
+    setWasCheck,
+    possibleMoves,
+    setPossibleMoves,
+    setIsLoadingMoves,
+    pieces,
+  } = boardState;
 
-import { applyMoves, movePieceLogic } from './boardLogic';
+  // 복기 관련 훅
+  const replayState = useReplayState({ setPieceBoard });
+  const { fetchMoves, handlePrev, handleNext, exitReplay } = replayState;
 
-import type { Dispatch, SetStateAction } from 'react';
-
-type BoardProps = {
-  gameId: number;
-  turnInfo: { count: number; turn: 'cho' | 'han' };
-  setTurnInfo: Dispatch<SetStateAction<{ count: number; turn: 'cho' | 'han' }>>;
-  isReplay: boolean;
-  onExitReplay?: () => void;
-  setWinner: Dispatch<SetStateAction<'cho' | 'han' | null>>; // App에서 내려주는 setter
-  setGameOver: Dispatch<SetStateAction<boolean>>; // App에서 내려주는 setter
-};
-
-export const Board = ({
-  gameId,
-  turnInfo,
-  setTurnInfo,
-  isReplay,
-  onExitReplay,
-  setWinner,
-  setGameOver,
-}: BoardProps) => {
-  const boardRef = useRef<HTMLDivElement>(null);
-  // 폰트 및 CSS 로딩 상태
-  const [isReady, setIsReady] = useState(false);
-
-  // 상태 관리
-  const [pieceBoard, setPieceBoard] =
-    useState<(PieceData | null)[][]>(initialBoard);
-  const [selected, setSelected] = useState<PieceData | null>(null);
-  const [wasCheck, setWasCheck] = useState<{ cho: boolean; han: boolean }>({
-    cho: false,
-    han: false,
+  // 기물 이동 관련 훅
+  const movement = usePieceMovement({
+    selected,
+    setSelected,
+    pieces,
+    setPossibleMoves,
+    setIsLoadingMoves,
+    wasCheck,
+    setPieceBoard,
+    setWasCheck,
   });
-
-  // 복기 관련 상태
-  const [moves, setMoves] = useState<Move[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // 이동 가능한 위치 상태 (백엔드에서 가져옴)
-  const [possibleMoves, setPossibleMoves] = useState<{ x: number; y: number }[]>([]);
-  const [isLoadingMoves, setIsLoadingMoves] = useState(false);
-
-  useEffect(() => {
-    boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    if (document.fonts) {
-      document.fonts.ready.then(() => {
-        setIsReady(true);
-      });
-    } else {
-      setTimeout(() => setIsReady(true), 0); // ✅ 비동기 처리
-    }
-  }, []);
-
-  const pieces = pieceBoard.flat().filter((p): p is PieceData => p !== null);
-
-  const handleSelect = async (piece: PieceData) => {
-    if (isReplay) return;
-    if (selected?.x === piece.x && selected?.y === piece.y) {
-      setSelected(null);
-      setPossibleMoves([]);
-    } else {
-      setSelected(piece);
-      setIsLoadingMoves(true);
-      try {
-        const moves = await fetchPossibleMoves({ x: piece.x, y: piece.y }, pieces);
-        setPossibleMoves(moves);
-      } catch (error) {
-        console.error('이동 가능한 위치를 가져오는데 실패했습니다:', error);
-        setPossibleMoves([]);
-      } finally {
-        setIsLoadingMoves(false);
-      }
-    }
-  };
-
-  const fetchMoves = async () => {
-    const data = await getMoves(gameId);
-    setMoves(data);
-    setCurrentIndex(0);
-    setPieceBoard(initialBoard);
-  };
-
-  const exitReplay = () => {
-    setMoves([]);
-    setCurrentIndex(0);
-    setPieceBoard(initialBoard);
-    setTurnInfo({ count: 1, turn: 'cho' });
-    if (onExitReplay) onExitReplay();
-  };
-
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      const newIndex = currentIndex - 1;
-      setCurrentIndex(newIndex);
-      const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
-      setPieceBoard(board);
-      setTurnInfo(newTurnInfo);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < moves.length) {
-      const newIndex = currentIndex + 1;
-      setCurrentIndex(newIndex);
-      const { board, turnInfo: newTurnInfo } = applyMoves(moves, newIndex);
-      setPieceBoard(board);
-      setTurnInfo(newTurnInfo);
-    }
-  };
-
-  const movePiece = (toX: number, toY: number) => {
-    if (isReplay || !selected) return;
-    movePieceLogic(
-      gameId,
-      toX,
-      toY,
-      selected,
-      turnInfo,
-      wasCheck,
-      setPieceBoard,
-      setSelected,
-      setGameOver, // ✅ App으로 전달
-      setWinner, // ✅ App으로 전달
-      setWasCheck,
-      (newTurnInfo) => setTurnInfo(newTurnInfo)
-    );
-  };
+  const { handleSelect, movePiece } = movement;
 
   return (
     <>
       {isReplay && (
-        <div>
-          <Button onClick={fetchMoves}>히스토리 불러오기</Button>
-          <Button onClick={handlePrev}>◀ 이전</Button>
-          <Button onClick={handleNext}>다음 ▶</Button>
-          <Button onClick={exitReplay}>복기 종료</Button>
-        </div>
+        <ReplayControls
+          onFetchMoves={fetchMoves}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onExit={exitReplay}
+        />
       )}
 
       <div
@@ -157,55 +61,13 @@ export const Board = ({
         ref={boardRef}
         style={{ visibility: isReady ? 'visible' : 'hidden' }}
       >
-        {/* 9x8 셀 그리드 */}
-        <div className='board-grid'>
-          {Array.from({ length: 9 }).map((_, rowIndex) => (
-            <div key={rowIndex} className='board-row'>
-              {Array.from({ length: 8 }).map((_, colIndex) => (
-                <BoardCell
-                  key={`${rowIndex}-${colIndex}`}
-                  x={colIndex}
-                  y={rowIndex}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* 기물 레이어 */}
-        <div className='pieces-layer'>
-          {pieceBoard.flat().map((piece, i) =>
-            piece ? (
-              <div
-                key={`piece-${i}`}
-                className={`piece-position ${
-                  piece.team !== turnInfo.turn ? 'unable' : ''
-                }`}
-                style={{ left: `${piece.x * 60}px`, top: `${piece.y * 60}px` }}
-                onClick={() => {
-                  if (!isReplay) {
-                    const isOpponent = piece.team !== turnInfo.turn;
-                    if (!isOpponent) handleSelect(piece);
-                  }
-                }}
-              >
-                <Piece type={piece.type} team={piece.team} size={50} />
-              </div>
-            ) : null
-          )}
-        </div>
-
-        {/* 이동 가능 위치 하이라이트 */}
-        {selected &&
-          !isReplay &&
-          possibleMoves.map((pos, i) => (
-            <div
-              key={`highlight-${i}`}
-              className='highlight-circle'
-              style={{ left: `${pos.x * 60}px`, top: `${pos.y * 60}px` }}
-              onClick={() => movePiece(pos.x, pos.y)}
-            />
-          ))}
+        <BoardGrid />
+        <PiecesLayer pieceBoard={pieceBoard} onPieceClick={handleSelect} />
+        <MoveHighlights
+          selected={selected}
+          possibleMoves={possibleMoves}
+          onMoveClick={movePiece}
+        />
       </div>
     </>
   );

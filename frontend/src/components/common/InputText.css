@@ -7,13 +7,19 @@
   background-color: #fffaf0;
   color: #3e2723;
   font-size: 15px;
-  outline: none;
+  outline: none !important;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .input-label:focus {
-  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+  outline: none !important;
+  border-color: #d2b48c;
+}
+
+.input-label:focus-visible {
+  outline: none !important;
+  border-color: #d2b48c;
 }
 
 .input-label::placeholder {

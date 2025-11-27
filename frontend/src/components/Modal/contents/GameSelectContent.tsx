@@ -1,27 +1,21 @@
 import { useState } from 'react';
-import { COLORS } from '../../constants/colors';
-import InputText from '../common/InputText';
-import { Button } from '../common/Button';
-import { getGamesByPlayer } from '../../api/gameApi';
+import { useGameContext } from '../../../contexts/GameContext';
+import { COLORS } from '../../../constants/colors';
+import InputText from '../../common/InputText';
+import { Button } from '../../common/Button';
+import { getGamesByPlayer } from '../../../api/gameApi';
 
-interface Game {
+type Game = {
   id: number;
   player1: string;
   player2: string;
   startedAt: string;
   endedAt: string;
-  winner :string;
-}
+  winner: string;
+};
 
-interface GameSelectModalProps {
-  onSelectGame: (game: Game) => void; // ✅ game 객체 전체 전달
-  onCancel?: () => void;
-}
-
-export function GameSelectModal({
-  onSelectGame,
-  onCancel,
-}: GameSelectModalProps) {
+export const GameSelectContent = () => {
+  const { selectGame } = useGameContext();
   const [playerName, setPlayerName] = useState('');
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,11 +67,11 @@ export function GameSelectModal({
         className='game-list'
         style={{
           marginTop: '16px',
-          maxHeight: '200px', // ✅ 원하는 높이 지정
-          overflowY: 'auto', // ✅ 세로 스크롤 활성화
-          border: '1px solid #ddd', // ✅ 박스 테두리 (선택)
-          borderRadius: '4px', // ✅ 모서리 둥글게 (선택)
-          padding: '8px', // ✅ 내부 여백 (선택)
+          maxHeight: '200px',
+          overflowY: 'auto',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          padding: '8px',
         }}
       >
         {games.length === 0 && !loading ? (
@@ -103,15 +97,20 @@ export function GameSelectModal({
                   상대: {game.player1 === playerName ? game.player2 : game.player1}
                 </p>
                 <p>날짜: {new Date(game.startedAt).toLocaleString()}</p>
-                {game.winner?(<p>{(game.winner=='cho')?`${game.player1}(초)`:`${game.player2}(한)`} 승</p>):"진행중"}
+                {game.winner ? (
+                  <p>
+                    {game.winner == 'cho' ? `${game.player1}(초)` : `${game.player2}(한)`}{' '}
+                    승
+                  </p>
+                ) : (
+                  '진행중'
+                )}
               </span>
-              <Button onClick={() => onSelectGame(game)}>복기 시작</Button>
+              <Button onClick={() => selectGame(game)}>복기 시작</Button>
             </div>
           ))
         )}
       </div>
-
-      {onCancel && <Button onClick={onCancel}>닫기</Button>}
     </>
   );
-}
+};

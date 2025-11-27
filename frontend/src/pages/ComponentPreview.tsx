@@ -82,7 +82,7 @@ export const ComponentPreview = () => {
           <br />
           <h2>Modal</h2>
           <Button onClick={() => setIsModalOpen(!isModalOpen)}>모달 열기</Button>
-          {isModalOpen && <Modal>모달 내용</Modal>}
+          {/* {isModalOpen && <Modal title='모달 제목' onClose={() => setIsModalOpen(false)}>모달 내용</Modal>} */}
           <br />
           <h2>Game Pieces</h2>
           <div className='piece-showcase'>
