@@ -43,46 +43,41 @@ export const applyMoves = (
 
 // 체크메이트 판정 (백엔드 API 사용)
 export const checkMate = async (
+  gameId: number,
   flatBoard: PieceData[],
   turn: 'cho' | 'han'
 ): Promise<boolean> => {
+  // 1. 현재 왕 찾기
   const king = flatBoard.find((p) => p.type === '왕' && p.team === turn);
   if (!king) return true;
 
-  try {
-    const kingMoves = await getPossibleMoves({ x: king.x, y: king.y }, flatBoard);
-    
-    // 왕이 이동할 수 있는 곳이 있는지 확인
-    for (const move of kingMoves) {
-      const simulated = flatBoard
-        .filter((p) => !(p.x === move.x && p.y === move.y))
-        .map((p) =>
-          p.x === king.x && p.y === king.y
-            ? { ...p, x: move.x, y: move.y }
-            : { ...p }
-        );
-      
-      // 해당 위치로 이동했을 때 장군 상태가 아니면 탈출 가능
-      const validation = await validateMove(
-        { x: king.x, y: king.y },
-        { x: move.x, y: move.y },
-        flatBoard
-      );
-      
-      if (validation.valid) {
-        return false; // 탈출 가능
-      }
+  // 2. 먼저 장군 상태인지 확인 (백엔드 API 호출)
+  const inCheck = await isCheckViaBackend(gameId, flatBoard, turn); // ← 백엔드에서 장군 여부 확인하는 API 필요
+  if (!inCheck) return false; // 장군이 아니면 체크메이트 아님
+
+  // 3. 왕의 이동 가능한 위치 조회
+  const kingMoves = await getPossibleMoves(gameId, { x: king.x, y: king.y });
+
+  // 4. 이동 가능한 곳 중 유효한 수가 있는지 검사
+  for (const move of kingMoves) {
+    const validation = await validateMove(
+      gameId,
+      { x: king.x, y: king.y },
+      { x: move.x, y: move.y }
+    );
+
+    if (validation.valid) {
+      return false; // 탈출 가능 → 체크메이트 아님
     }
-    
-    return true; // 탈출 불가능 = 체크메이트
-  } catch (error) {
-    console.error('체크메이트 판정 실패:', error);
-    return false;
   }
+
+  // 5. 장군 상태 + 탈출 불가 → 체크메이트
+  return true;
 };
 
 // isCheck 함수를 백엔드 API로 대체
 const isCheckViaBackend = async (
+  gameId: number,
   flatBoard: PieceData[],
   team: 'cho' | 'han'
 ): Promise<boolean> => {
@@ -91,10 +86,10 @@ const isCheckViaBackend = async (
 
   // 상대편 기물들이 왕을 공격할 수 있는지 확인
   const opponentPieces = flatBoard.filter((p) => p.team !== team);
-  
+
   for (const piece of opponentPieces) {
     try {
-      const moves = await getPossibleMoves({ x: piece.x, y: piece.y }, flatBoard);
+      const moves = await getPossibleMoves(gameId, { x: piece.x, y: piece.y });
       if (moves.some((pos) => pos.x === king.x && pos.y === king.y)) {
         return true; // 장군 상태
       }
@@ -102,7 +97,7 @@ const isCheckViaBackend = async (
       console.error('장군 상태 확인 실패:', error);
     }
   }
-  
+
   return false;
 };
 
@@ -186,24 +181,27 @@ export const movePieceLogic = async (
   }
 
   const nextTurn = turnInfo.turn === 'cho' ? 'han' : 'cho';
-  const isMate = await checkMate(updatedFlatBoard, nextTurn);
-  
+  const isMate = await checkMate(gameId, updatedFlatBoard, nextTurn);
+
   if (isMate) {
     setGameOver(true);
+    console.log('체크메이트'
+    );
+
     setWinner(turnInfo.turn);
     await endGame(gameId, turnInfo.turn);
     return;
   }
 
   const currentTurn = turnInfo.turn;
-  const checkNow = await isCheckViaBackend(updatedFlatBoard, currentTurn);
+  const checkNow = await isCheckViaBackend(gameId, updatedFlatBoard, currentTurn);
 
   if (!checkNow && wasCheck[currentTurn]) {
     console.log('멍군!');
   }
 
   const nextCount = turnInfo.count + 1;
-  const checkNext = await isCheckViaBackend(updatedFlatBoard, nextTurn);
+  const checkNext = await isCheckViaBackend(gameId, updatedFlatBoard, nextTurn);
 
   // ✅ check 상태면 "장군!"만 출력
   if (checkNow) {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { log } from 'console';
 
 export interface Position {
   x: number;
@@ -31,8 +32,12 @@ export class JanggiRulesService {
         return this.kingMoves(piece, board);
       case '포':
         return this.poMoves(piece, board);
-      case '졸':
+      case '졸': {
+        console.log(piece.team);
+
         return this.poneMoves(piece, board);
+      }
+
       default:
         return [];
     }
@@ -42,13 +47,24 @@ export class JanggiRulesService {
    * 합법적인 이동 위치 반환 (장군 상태 고려)
    */
   getLegalMoves(piece: PieceData, board: PieceData[]): Position[] {
+    console.log('▶ getLegalMoves called');
+    console.log('piece:', piece);
+
     const possible = this.getPossibleMoves(piece, board);
+    console.log('possible moves:', possible);
+
     const legal: Position[] = [];
 
     for (const move of possible) {
+      console.log('--- checking move:', move);
+
       // 가상 보드 생성
       const newBoard = board.map((p) => ({ ...p }));
+
+      // 현재 piece 위치 찾기
       const idx = newBoard.findIndex((p) => p.x === piece.x && p.y === piece.y);
+      console.log('piece index in board:', idx);
+
       if (idx !== -1) {
         newBoard[idx] = { ...piece, x: move.x, y: move.y };
       }
@@ -57,14 +73,23 @@ export class JanggiRulesService {
       const capturedIdx = newBoard.findIndex(
         (p) => p.x === move.x && p.y === move.y && p.team !== piece.team,
       );
+      console.log('captured index:', capturedIdx);
+
       if (capturedIdx !== -1) newBoard.splice(capturedIdx, 1);
 
       // 자기 왕이 공격받는지 검사
-      if (!this.isCheck(newBoard, piece.team)) {
+      const checkStatus = this.isCheck(newBoard, piece.team);
+      console.log('isCheck result:', checkStatus);
+
+      if (!checkStatus) {
         legal.push(move);
+        console.log('✅ legal move added:', move);
+      } else {
+        console.log('❌ move blocked by check:', move);
       }
     }
 
+    console.log('final legal moves:', legal);
     return legal;
   }
 
@@ -83,6 +108,8 @@ export class JanggiRulesService {
     for (const piece of opponentPieces) {
       const moves = this.getPossibleMoves(piece, board);
       if (moves.some((pos) => pos.x === king.x && pos.y === king.y)) {
+        console.log('장군');
+
         return true; // 왕이 공격받음 → 장군 상태
       }
     }
@@ -95,30 +122,24 @@ export class JanggiRulesService {
    */
   private poneMoves(piece: PieceData, board: PieceData[]): Position[] {
     const moves: Position[] = [];
-    const { x, y } = piece;
+    const { x, y, team } = piece;
 
-    const poneSteps =
-      piece.team === 'cho'
-        ? [
-            { move: { dx: 0, dy: 1 } }, // 아래로 전진
-            { move: { dx: -1, dy: 0 } }, // 좌
-            { move: { dx: 1, dy: 0 } }, // 우
-          ]
-        : [
-            { move: { dx: 0, dy: -1 } }, // 위로 전진
-            { move: { dx: -1, dy: 0 } }, // 좌
-            { move: { dx: 1, dy: 0 } }, // 우
-          ];
+    // 프론트 좌표계 기준: y 증가 = 아래로 내려감
+    // cho는 아래로 전진(+1), han은 위로 전진(-1)
+    const forwardDy = team == 'cho' ? +1 : -1;
 
-    for (const step of poneSteps) {
-      const moveX = x + step.move.dx;
-      const moveY = y + step.move.dy;
 
-      if (moveX >= 0 && moveX < 9 && moveY >= 0 && moveY < 10) {
-        const occupied = board.find((p) => p?.x === moveX && p?.y === moveY);
-        if (!occupied || occupied.team !== piece.team) {
-          moves.push({ x: moveX, y: moveY });
-        }
+    const candidates: Position[] = [
+      { x, y: y + forwardDy }, // 전진
+      { x: x - 1, y },         // 좌
+      { x: x + 1, y },         // 우
+    ];
+
+    for (const pos of candidates) {
+      if (pos.x < 0 || pos.x >= 9 || pos.y < 0 || pos.y >= 10) continue;
+      const occupied = board.find((p) => p.x === pos.x && p.y === pos.y);
+      if (!occupied || occupied.team !== team) {
+        moves.push(pos);
       }
     }
 

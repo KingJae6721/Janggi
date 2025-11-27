@@ -1,5 +1,5 @@
 import { useGameContext } from '../../../contexts/GameContext';
-import { getPossibleMoves as fetchPossibleMoves } from '../../../api/gameApi';
+import { getPossibleMoves } from '../../../api/gameApi';
 import { movePieceLogic } from '../boardLogic';
 import type { PieceData } from '../../../types/types';
 import type { Dispatch, SetStateAction } from 'react';
@@ -37,7 +37,15 @@ export const usePieceMovement = ({
       setSelected(piece);
       setIsLoadingMoves(true);
       try {
-        const moves = await fetchPossibleMoves({ x: piece.x, y: piece.y }, pieces);
+        if (!gameId) {
+          console.error('게임 ID가 없습니다');
+          setPossibleMoves([]);
+          return;
+        }
+
+        const moves = await getPossibleMoves(gameId, { x: piece.x, y: piece.y });
+        console.log(piece, gameId)
+        console.log(moves)
         setPossibleMoves(moves);
       } catch (error) {
         console.error('이동 가능한 위치를 가져오는데 실패했습니다:', error);
