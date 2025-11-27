@@ -3,12 +3,12 @@ import { GameService } from './game.service';
 import { Game } from './game.entity';
 import { Move } from './move.entity';
 
-@Controller('game')
+@Controller('games')
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
   // 현재 보드 상태 조회
-  @Get('board')
+  @Get('boards')
   getBoard() {
     return this.gameService.getBoard();
   }
@@ -31,7 +31,7 @@ export class GameController {
     return this.gameService.endGame(id, winner);
   }
 
-  @Get('player/:name')
+  @Get('players/:name')
   async getGamesByPlayer(@Param('name') name: string): Promise<Game[]> {
     return this.gameService.getGamesByPlayer(name);
   }
@@ -52,7 +52,7 @@ export class GameController {
   }
 
   // 말 이동 처리 (단순히 보드 상태 업데이트)
-  @Post('move')
+  @Post('moves')
   movePiece(
     @Body('from') from: { x: number; y: number },
     @Body('to') to: { x: number; y: number },
@@ -61,7 +61,7 @@ export class GameController {
   }
 
   // 이동 검증
-  @Post('validate-move')
+  @Post('validate-moves')
   validateMove(
     @Body('from') from: { x: number; y: number },
     @Body('to') to: { x: number; y: number },
@@ -79,3 +79,12 @@ export class GameController {
     return this.gameService.getPossibleMovesForPiece(from, board);
   }
 }
+// POST /games -> 새 게임 생성
+// GET /games -> 전체 게임 목록 (옵션: ?player=name)
+// GET /games/:gameId -> 단일 게임 정보 (보드 포함)
+// GET /games/:gameId/board -> 해당 게임의 보드 상태
+// PATCH /games/:gameId -> 게임 상태 업데이트(예: 종료)
+// GET /games/:gameId/moves -> 이동 기록 조회
+// POST /games/:gameId/moves -> 이동 추가(즉, 기물 이동)
+// POST /games/:gameId/moves/validate -> 서버 측 이동 검증(또는 GET 대안)
+// GET /games/:gameId/pieces/:x/:y/possible-moves -> 특정 말의 가능한 이동 조회
