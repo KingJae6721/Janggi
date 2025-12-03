@@ -13,7 +13,7 @@ import { Move } from './move.entity';
 
 @Controller('games')
 export class GameController {
-  constructor(private readonly gameService: GameService) { }
+  constructor(private readonly gameService: GameService) {}
 
   /** 새 게임 생성 */
   @Post()
@@ -79,7 +79,4 @@ export class GameController {
   ): Promise<Game> {
     return this.gameService.endGame(id, winner);
   }
-
-
 }
-

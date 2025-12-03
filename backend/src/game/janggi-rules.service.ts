@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { log } from 'console';
 
 export interface Position {
   x: number;
@@ -128,11 +127,10 @@ export class JanggiRulesService {
     // cho는 아래로 전진(+1), han은 위로 전진(-1)
     const forwardDy = team == 'cho' ? +1 : -1;
 
-
     const candidates: Position[] = [
       { x, y: y + forwardDy }, // 전진
-      { x: x - 1, y },         // 좌
-      { x: x + 1, y },         // 우
+      { x: x - 1, y }, // 좌
+      { x: x + 1, y }, // 우
     ];
 
     for (const pos of candidates) {
