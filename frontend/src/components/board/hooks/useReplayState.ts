@@ -10,7 +10,7 @@ type UseReplayStateProps = {
 };
 
 export const useReplayState = ({ setPieceBoard }: UseReplayStateProps) => {
-  const { gameId, setTurnInfo, setIsReplay } = useGameContext();
+  const { gameId, setTurnInfo, setIsReplay ,setIsEnabled, setGameId} = useGameContext();
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -27,6 +27,8 @@ export const useReplayState = ({ setPieceBoard }: UseReplayStateProps) => {
     setPieceBoard(initialBoard);
     setTurnInfo({ count: 1, turn: 'cho' });
     setIsReplay(false);
+    setIsEnabled(false);
+    setGameId(null);
   };
 
   const handlePrev = () => {

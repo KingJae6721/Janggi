@@ -12,6 +12,7 @@ export const GameStartModals = () => {
   return (
     <div
       style={{
+        
         position: 'fixed',
         top: '50%',
         left: '50%',

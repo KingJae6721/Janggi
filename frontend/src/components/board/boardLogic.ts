@@ -3,7 +3,14 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { PieceData } from '../../types/types';
 import type { Move } from '../../types/move';
 import { initialBoard } from '../../constants/initialPieces';
-import { addMove, endGame, validateMove, getPossibleMoves } from '../../api/gameApi';
+import {
+  addMove,
+  endGame,
+  validateMove,
+  getPossibleMoves,
+} from '../../api/gameApi';
+
+import { toast } from 'react-toastify';
 
 export const getTeamByTurn = (turn: number): 'cho' | 'han' => {
   return turn % 2 === 1 ? 'cho' : 'han';
@@ -124,7 +131,9 @@ export const movePieceLogic = async (
     return prev;
   });
 
-  const flatBoard = currentBoard.flat().filter((p): p is PieceData => p !== null);
+  const flatBoard = currentBoard
+    .flat()
+    .filter((p): p is PieceData => p !== null);
 
   // 백엔드에서 이동 검증
   /*
@@ -168,9 +177,15 @@ export const movePieceLogic = async (
     team: selected.team,
   });
 
-  const updatedFlatBoard = newBoard.flat().filter((p): p is PieceData => p !== null);
-  const choKing = updatedFlatBoard.find((p) => p.type === '왕' && p.team === 'cho');
-  const hanKing = updatedFlatBoard.find((p) => p.type === '왕' && p.team === 'han');
+  const updatedFlatBoard = newBoard
+    .flat()
+    .filter((p): p is PieceData => p !== null);
+  const choKing = updatedFlatBoard.find(
+    (p) => p.type === '왕' && p.team === 'cho'
+  );
+  const hanKing = updatedFlatBoard.find(
+    (p) => p.type === '왕' && p.team === 'han'
+  );
 
   if (!choKing || !hanKing) {
     setGameOver(true);
@@ -185,8 +200,7 @@ export const movePieceLogic = async (
 
   if (isMate) {
     setGameOver(true);
-    console.log('체크메이트'
-    );
+    console.log('체크메이트');
 
     setWinner(turnInfo.turn);
     await endGame(gameId, turnInfo.turn);
@@ -194,10 +208,24 @@ export const movePieceLogic = async (
   }
 
   const currentTurn = turnInfo.turn;
-  const checkNow = await isCheckViaBackend(gameId, updatedFlatBoard, currentTurn);
+  const checkNow = await isCheckViaBackend(
+    gameId,
+    updatedFlatBoard,
+    currentTurn
+  );
 
   if (!checkNow && wasCheck[currentTurn]) {
     console.log('멍군!');
+    toast('멍군!', {
+      style: {
+        backgroundColor: '#ffe590ff',
+        color: 'rgba(63, 165, 60, 1)',
+        fontWeight: 'bold',
+        fontSize: '30px',
+        justifyContent: 'center',
+      },
+      hideProgressBar: true,
+    });
   }
 
   const nextCount = turnInfo.count + 1;
@@ -206,9 +234,30 @@ export const movePieceLogic = async (
   // ✅ check 상태면 "장군!"만 출력
   if (checkNow) {
     console.log('장군!');
+    toast('장군!', {
+      style: {
+        backgroundColor: '#ffe590ff',
+        color: '#c42121ff',
+        fontWeight: 'bold',
+        fontSize: '30px',
+        justifyContent: 'center',
+      },
+      hideProgressBar: true,
+    });
   }
   if (checkNext) {
     console.log('장군!');
+    toast('장군!', {
+      style: {
+        backgroundColor: '#ffe590ff',
+        color: '#c42121ff',
+        fontWeight: 'bold',
+        fontSize: '30px',
+
+        justifyContent: 'center',
+      },
+      hideProgressBar: true,
+    });
   }
 
   setWasCheck((prevWas) => ({

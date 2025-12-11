@@ -46,7 +46,7 @@ export const Board = () => {
   const { handleSelect, movePiece } = movement;
 
   return (
-    <>
+    <div className='board-container'>
       {isReplay && (
         <ReplayControls
           onFetchMoves={fetchMoves}
@@ -69,6 +69,6 @@ export const Board = () => {
           onMoveClick={movePiece}
         />
       </div>
-    </>
+    </div>
   );
 };

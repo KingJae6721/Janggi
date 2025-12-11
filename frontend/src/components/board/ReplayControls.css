@@ -1,0 +1,36 @@
+.replay-controls {
+  display: flex; /* 버튼들을 가로로 배치 */
+  gap: 12px; /* 버튼 사이 간격 */
+  justify-content: center; /* 가운데 정렬 */
+  margin-bottom: 16px; /* 보드와 간격 */
+}
+
+.replay-controls button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* 복기버튼 */
+.replay-controls button {
+  background-color: #ffb800; /* 밝은 노란색/골드 */
+
+  color: black;
+}
+
+.replay-controls button:hover {
+  background-color: #f4b109;
+}
+
+/* 복기 종료 버튼만 붉은 색 */
+.replay-controls button.exit {
+  background-color: #e57373; /* 연한 붉은색 */
+  color: black;
+}
+
+.replay-controls button.exit:hover {
+  background-color: #d32f2f; /* hover 시 진한 붉은색 */
+}

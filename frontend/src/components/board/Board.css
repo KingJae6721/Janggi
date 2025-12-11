@@ -8,6 +8,11 @@
   /* 보드 그림자 */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+.board-container {
+  display: flex;
+  flex-direction: column; /* 위→아래 배치 */
+  align-items: center; /* 가운데 정렬 */
+}
 
 .board-grid {
   position: relative;

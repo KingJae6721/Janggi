@@ -30,7 +30,7 @@ const TeamInfoBox = ({
           }}
         >
           {/* TODO : 디자인 수정해주십쇼 */}
-          {turnCount}수{currentPlayer === 'cho' ? `${player1Name}(초)`:`${player2Name}(한)`}의 차례입니다
+          {turnCount}수   {currentPlayer === 'cho' ? `${player1Name}(초)`:`${player2Name}(한)`}의 차례입니다
         </p>
         <Button onClick={handleNewGame}>새 게임</Button>
       </div>
